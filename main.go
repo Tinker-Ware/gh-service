@@ -1,6 +1,8 @@
 package main
 
 import (
+	"flag"
+
 	"github.com/codegangsta/negroni"
 	"github.com/gh-service/interfaces"
 	"github.com/gh-service/usecases"
@@ -16,7 +18,12 @@ import (
 // TODO: Figure out how to get a token without OAUTH to use tests
 // TODO: Inject GH API data from here
 
+// Define configuration flags
+var confFilePath = flag.String("conf", " /etc/iaas/gh-service.yaml", "Custom path for configuration file")
+
 func main() {
+
+	flag.Parse()
 
 	userRepo := interfaces.UserRepo{}
 	ghinteractor := usecases.GHInteractor{
