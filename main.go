@@ -17,6 +17,8 @@ import (
 	ghoauth "golang.org/x/oauth2/github"
 )
 
+const defaultPath = "/etc/gh-service.conf"
+
 // TODO: DRY client usage in handlers
 // TODO: Cache to avoid multiple calls to the GH API
 // TODO: Pass the token in the header to delegate the management to another microservice
@@ -26,7 +28,7 @@ import (
 // TODO: Inject GH API data from here
 
 // Define configuration flags
-var confFilePath = flag.String("conf", "/etc/iaas/gh-service.yaml", "Custom path for configuration file")
+var confFilePath = flag.String("conf", defaultPath, "Custom path for configuration file")
 
 func main() {
 
