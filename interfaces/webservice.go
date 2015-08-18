@@ -13,7 +13,7 @@ import (
 )
 
 const htmlIndex = `<html><body>
-Logged in with <a href="/login">GitHub</a>
+Logged in with <a href="/github/login">GitHub</a>
 </body></html>`
 
 const htmlCloseWindow = `<html><body>
@@ -67,24 +67,16 @@ func (handler WebServiceHandler) Callback(res http.ResponseWriter, req *http.Req
 
 	usrB, _ := json.Marshal(user)
 
-	session, err := handler.Sessions.Get(req, "user")
-	if err != nil {
-		http.Error(res, err.Error(), 500)
-		return
-	}
-
-	session.Values["user"] = usrB
-
-	res.Header().Set("Content-Type", "text/html; charset=utf-8")
-	res.WriteHeader(http.StatusOK)
-	res.Write([]byte(htmlCloseWindow))
+	res.Header().Set("Content-Type", "application/json")
+	res.WriteHeader(http.StatusCreated)
+	res.Write(usrB)
 
 }
 
 func (handler WebServiceHandler) Root(res http.ResponseWriter, req *http.Request) {
 	res.Header().Set("Content-Type", "text/html; charset=utf-8")
 	res.WriteHeader(http.StatusOK)
-	res.Write([]byte(htmlCloseWindow))
+	res.Write([]byte(htmlIndex))
 }
 
 func (handler WebServiceHandler) GetCurrentUser(res http.ResponseWriter, req *http.Request) {
@@ -98,7 +90,7 @@ func (handler WebServiceHandler) GetCurrentUser(res http.ResponseWriter, req *ht
 
 	userS := usr.(string)
 
-	res.Header().Set("Content-Type", "text/html; charset=utf-8")
+	res.Header().Set("Content-Type", "application/json")
 	res.WriteHeader(http.StatusOK)
 	res.Write([]byte(userS))
 
@@ -117,7 +109,7 @@ func (handler WebServiceHandler) ShowUser(res http.ResponseWriter, req *http.Req
 
 	userB, _ := json.Marshal(user)
 
-	res.Header().Set("Content-Type", "application/json; charset=utf-8")
+	res.Header().Set("Content-Type", "application/json")
 	res.WriteHeader(http.StatusOK)
 	res.Write([]byte(userB))
 }
