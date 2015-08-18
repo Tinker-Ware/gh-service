@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"flag"
 	"fmt"
 
@@ -72,5 +73,11 @@ func main() {
 
 	n := negroni.Classic()
 	n.UseHandler(r)
-	n.Run(":" + config.Port)
+
+	port := bytes.Buffer{}
+
+	port.WriteString(":")
+	port.WriteString(config.Port)
+
+	n.Run(port.String())
 }
