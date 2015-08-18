@@ -11,7 +11,6 @@ import (
 	"github.com/google/go-github/github"
 
 	"golang.org/x/oauth2"
-	ghoauth "golang.org/x/oauth2/github"
 )
 
 type UserRepo interface {
@@ -22,23 +21,17 @@ type UserRepo interface {
 }
 
 type GHInteractor struct {
-	UserRepo UserRepo
+	UserRepo    UserRepo
+	OauthConfig *oauth2.Config
 }
 
 var (
 	letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
-
-	oauthConfig = &oauth2.Config{
-		ClientID:     "",
-		ClientSecret: "",
-		Scopes:       []string{"user:email", "repo", "admin:public_key"},
-		Endpoint:     ghoauth.Endpoint,
-	}
 )
 
 func (interactor GHInteractor) GHLogin() (string, string) {
 	oauthStateString := randSeq(10)
-	url := oauthConfig.AuthCodeURL(oauthStateString, oauth2.AccessTypeOnline)
+	url := interactor.OauthConfig.AuthCodeURL(oauthStateString, oauth2.AccessTypeOnline)
 	return url, oauthStateString
 
 }
@@ -51,14 +44,14 @@ func (interactor GHInteractor) GHCallback(code, state, incomingState string) (*d
 	// 	return nil, errors.New("Invalid Oauth2 state")
 	// }
 
-	token, err := oauthConfig.Exchange(oauth2.NoContext, code)
+	token, err := interactor.OauthConfig.Exchange(oauth2.NoContext, code)
 	if err != nil {
 		// TODO: Log with interactor Logger not yet implemented
 		fmt.Printf("oauthConf.Exchange() failed with '%s'\n", err.Error())
 		return nil, err
 	}
 
-	oauthClient := oauthConfig.Client(oauth2.NoContext, token)
+	oauthClient := interactor.OauthConfig.Client(oauth2.NoContext, token)
 	client := github.NewClient(oauthClient)
 	user, _, err := client.Users.Get("")
 	if err != nil {

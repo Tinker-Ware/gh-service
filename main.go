@@ -1,12 +1,23 @@
 package main
 
 import (
+	"bytes"
+	"flag"
+	"fmt"
+
+	"golang.org/x/oauth2"
+
 	"github.com/codegangsta/negroni"
+	"github.com/gh-service/infraestructure"
 	"github.com/gh-service/interfaces"
 	"github.com/gh-service/usecases"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
+
+	ghoauth "golang.org/x/oauth2/github"
 )
+
+const defaultPath = "/etc/gh-service.conf"
 
 // TODO: DRY client usage in handlers
 // TODO: Cache to avoid multiple calls to the GH API
@@ -16,11 +27,30 @@ import (
 // TODO: Figure out how to get a token without OAUTH to use tests
 // TODO: Inject GH API data from here
 
+// Define configuration flags
+var confFilePath = flag.String("conf", defaultPath, "Custom path for configuration file")
+
 func main() {
+
+	flag.Parse()
+
+	config, err := infraestructure.GetConfiguration(*confFilePath)
+	if err != nil {
+		fmt.Println(err.Error())
+		panic("Cannot parse configuration")
+	}
+
+	oauth2client := &oauth2.Config{
+		ClientID:     config.ClientID,
+		ClientSecret: config.ClientSecret,
+		Scopes:       config.Scopes,
+		Endpoint:     ghoauth.Endpoint,
+	}
 
 	userRepo := interfaces.UserRepo{}
 	ghinteractor := usecases.GHInteractor{
-		UserRepo: userRepo,
+		UserRepo:    userRepo,
+		OauthConfig: oauth2client,
 	}
 
 	store := sessions.NewCookieStore([]byte("something-very-secret"))
@@ -45,5 +75,11 @@ func main() {
 
 	n := negroni.Classic()
 	n.UseHandler(r)
-	n.Run(":7000")
+
+	port := bytes.Buffer{}
+
+	port.WriteString(":")
+	port.WriteString(config.Port)
+
+	n.Run(port.String())
 }
