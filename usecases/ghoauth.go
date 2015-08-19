@@ -13,15 +13,7 @@ import (
 	"golang.org/x/oauth2"
 )
 
-type UserRepo interface {
-	Store(user domain.User) error
-	RetrieveByID(id int) (*domain.User, error)
-	RetrieveByUserName(username string) (*domain.User, error)
-	Update(incUser domain.User) error
-}
-
 type GHInteractor struct {
-	UserRepo    UserRepo
 	OauthConfig *oauth2.Config
 }
 
