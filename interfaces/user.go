@@ -17,13 +17,13 @@ var counter = 0
 var users = []domain.User{}
 
 func (repo UserRepo) Store(user domain.User) error {
-	user.ID = int64(counter)
+	user.ID = counter
 	counter++
 	users = append(users, user)
 	return nil
 }
 
-func (repo UserRepo) RetrieveByID(id int64) (*domain.User, error) {
+func (repo UserRepo) RetrieveByID(id int) (*domain.User, error) {
 
 	for _, user := range users {
 		if user.ID == id {

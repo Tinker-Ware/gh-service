@@ -30,13 +30,13 @@ type repoRequest struct {
 type GHInteractor interface {
 	GHCallback(code, state, incomingState string) (*domain.User, error)
 	GHLogin() (string, string)
-	ShowUser(username string) (*domain.User, error)
-	ShowRepos(username string) ([]domain.Repository, error)
-	CreateRepo(username, reponame, org string, private bool) (*domain.Repository, error)
-	ShowRepo(username, repo string) (*domain.Repository, error)
-	ShowKeys(username string) ([]domain.Key, error)
-	CreateKey(username string, key *domain.Key) error
-	ShowKey(username string, id int) (*domain.Key, error)
+	ShowUser(username, token string) (*domain.User, error)
+	ShowRepos(username, token string) ([]domain.Repository, error)
+	CreateRepo(username, token, reponame, org string, private bool) (*domain.Repository, error)
+	ShowRepo(username, token, repo string) (*domain.Repository, error)
+	ShowKeys(username, token string) ([]domain.Key, error)
+	CreateKey(username, token string, key *domain.Key) error
+	ShowKey(username, token string, id int) (*domain.Key, error)
 }
 
 type WebServiceHandler struct {
@@ -100,9 +100,12 @@ func (handler WebServiceHandler) ShowUser(res http.ResponseWriter, req *http.Req
 	vars := mux.Vars(req)
 	username := vars["username"]
 
-	user, err := handler.GHInteractor.ShowUser(username)
+	token := req.Header.Get(domain.TokenHeader)
+
+	user, err := handler.GHInteractor.ShowUser(username, token)
 
 	if err != nil {
+		fmt.Println(err.Error())
 		res.WriteHeader(http.StatusNotFound)
 		return
 	}
@@ -118,7 +121,9 @@ func (handler WebServiceHandler) ShowRepos(res http.ResponseWriter, req *http.Re
 	vars := mux.Vars(req)
 	username := vars["username"]
 
-	repos, err := handler.GHInteractor.ShowRepos(username)
+	token := req.Header.Get(domain.TokenHeader)
+
+	repos, err := handler.GHInteractor.ShowRepos(username, token)
 
 	if err != nil {
 		res.WriteHeader(http.StatusNotFound)
@@ -135,6 +140,8 @@ func (handler WebServiceHandler) ShowRepos(res http.ResponseWriter, req *http.Re
 func (handler WebServiceHandler) CreateRepo(res http.ResponseWriter, req *http.Request) {
 	defer req.Body.Close()
 
+	token := req.Header.Get(domain.TokenHeader)
+
 	decoder := json.NewDecoder(req.Body)
 	repo := repoRequest{}
 	err := decoder.Decode(&repo)
@@ -144,7 +151,7 @@ func (handler WebServiceHandler) CreateRepo(res http.ResponseWriter, req *http.R
 		return
 	}
 
-	r, err := handler.GHInteractor.CreateRepo(repo.Owner, repo.Name, repo.Org, repo.Private)
+	r, err := handler.GHInteractor.CreateRepo(repo.Owner, token, repo.Name, repo.Org, repo.Private)
 	if err != nil {
 		fmt.Println(err.Error())
 		res.WriteHeader(http.StatusInternalServerError)
@@ -164,7 +171,9 @@ func (handler WebServiceHandler) ShowRepo(res http.ResponseWriter, req *http.Req
 	username := vars["username"]
 	repoName := vars["repo"]
 
-	repo, err := handler.GHInteractor.ShowRepo(username, repoName)
+	token := req.Header.Get(domain.TokenHeader)
+
+	repo, err := handler.GHInteractor.ShowRepo(username, token, repoName)
 	if err != nil {
 		fmt.Println(err.Error())
 		res.WriteHeader(http.StatusInternalServerError)
@@ -184,7 +193,9 @@ func (handler WebServiceHandler) ShowKeys(res http.ResponseWriter, req *http.Req
 	vars := mux.Vars(req)
 	username := vars["username"]
 
-	keys, err := handler.GHInteractor.ShowKeys(username)
+	token := req.Header.Get(domain.TokenHeader)
+
+	keys, err := handler.GHInteractor.ShowKeys(username, token)
 	if err != nil {
 		fmt.Println(err.Error())
 		res.WriteHeader(http.StatusInternalServerError)
@@ -213,7 +224,10 @@ func (handler WebServiceHandler) CreateKey(res http.ResponseWriter, req *http.Re
 
 	vars := mux.Vars(req)
 	username := vars["username"]
-	err = handler.GHInteractor.CreateKey(username, &key)
+
+	token := req.Header.Get(domain.TokenHeader)
+
+	err = handler.GHInteractor.CreateKey(username, token, &key)
 
 	if err != nil {
 		fmt.Println(err.Error())
@@ -232,6 +246,9 @@ func (handler WebServiceHandler) ShowKey(res http.ResponseWriter, req *http.Requ
 	vars := mux.Vars(req)
 	username := vars["username"]
 	idStr := vars["id"]
+
+	token := req.Header.Get(domain.TokenHeader)
+
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
 		fmt.Println(err.Error())
@@ -239,7 +256,7 @@ func (handler WebServiceHandler) ShowKey(res http.ResponseWriter, req *http.Requ
 		return
 	}
 
-	key, err := handler.GHInteractor.ShowKey(username, id)
+	key, err := handler.GHInteractor.ShowKey(username, token, id)
 	if err != nil {
 		fmt.Println(err.Error())
 		res.WriteHeader(http.StatusInternalServerError)
