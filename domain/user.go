@@ -2,7 +2,7 @@ package domain
 
 // User is a type where the user attributes are stored
 type User struct {
-	ID          int64
+	ID          int
 	Username    string
 	AccessToken string
 }

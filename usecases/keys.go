@@ -5,20 +5,11 @@ import (
 
 	"github.com/gh-service/domain"
 	"github.com/google/go-github/github"
-	"golang.org/x/oauth2"
 )
 
-func (interactor GHInteractor) ShowKeys(username string) ([]domain.Key, error) {
-	user, err := interactor.UserRepo.RetrieveByUserName(username)
-	if err != nil {
-		return nil, err
-	}
-	ts := oauth2.StaticTokenSource(
-		&oauth2.Token{AccessToken: user.AccessToken},
-	)
-	tc := oauth2.NewClient(oauth2.NoContext, ts)
+func (interactor GHInteractor) ShowKeys(username, token string) ([]domain.Key, error) {
 
-	client := github.NewClient(tc)
+	client := getClient(token)
 
 	ghKeys, _, err := client.Users.ListKeys(username, nil)
 	if err != nil {
@@ -42,18 +33,9 @@ func (interactor GHInteractor) ShowKeys(username string) ([]domain.Key, error) {
 
 }
 
-func (interactor GHInteractor) CreateKey(username string, key *domain.Key) error {
+func (interactor GHInteractor) CreateKey(username, token string, key *domain.Key) error {
 
-	user, err := interactor.UserRepo.RetrieveByUserName(username)
-	if err != nil {
-		return err
-	}
-	ts := oauth2.StaticTokenSource(
-		&oauth2.Token{AccessToken: user.AccessToken},
-	)
-	tc := oauth2.NewClient(oauth2.NoContext, ts)
-
-	client := github.NewClient(tc)
+	client := getClient(token)
 
 	k := github.Key{
 		Title: key.Title,
@@ -71,17 +53,9 @@ func (interactor GHInteractor) CreateKey(username string, key *domain.Key) error
 	return nil
 }
 
-func (interactor GHInteractor) ShowKey(username string, id int) (*domain.Key, error) {
-	user, err := interactor.UserRepo.RetrieveByUserName(username)
-	if err != nil {
-		return nil, err
-	}
-	ts := oauth2.StaticTokenSource(
-		&oauth2.Token{AccessToken: user.AccessToken},
-	)
-	tc := oauth2.NewClient(oauth2.NoContext, ts)
+func (interactor GHInteractor) ShowKey(username, token string, id int) (*domain.Key, error) {
 
-	client := github.NewClient(tc)
+	client := getClient(token)
 
 	ghkey, _, err := client.Users.GetKey(id)
 	if err != nil {
