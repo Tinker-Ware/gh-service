@@ -61,7 +61,7 @@ func main() {
 	}
 
 	r := mux.NewRouter()
-	subrouter := r.PathPrefix("/github/").Subrouter()
+	subrouter := r.PathPrefix("/github").Subrouter()
 	subrouter.HandleFunc("/", handler.Root)
 	subrouter.HandleFunc("/login", handler.Login)
 	subrouter.HandleFunc("/github_oauth_cb", handler.Callback)
