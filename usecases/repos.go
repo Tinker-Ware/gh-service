@@ -5,20 +5,11 @@ import (
 
 	"github.com/gh-service/domain"
 	"github.com/google/go-github/github"
-	"golang.org/x/oauth2"
 )
 
-func (interactor GHInteractor) ShowRepos(username string) ([]domain.Repository, error) {
-	user, err := interactor.UserRepo.RetrieveByUserName(username)
-	if err != nil {
-		return nil, err
-	}
-	ts := oauth2.StaticTokenSource(
-		&oauth2.Token{AccessToken: user.AccessToken},
-	)
-	tc := oauth2.NewClient(oauth2.NoContext, ts)
+func (interactor GHInteractor) ShowRepos(username, token string) ([]domain.Repository, error) {
 
-	client := github.NewClient(tc)
+	client := getClient(token)
 
 	// list all repositories for the authenticated user
 	ghrepos, _, err := client.Repositories.List("", nil)
@@ -47,23 +38,14 @@ func (interactor GHInteractor) ShowRepos(username string) ([]domain.Repository, 
 	return repos, nil
 }
 
-func (interactor GHInteractor) CreateRepo(username, reponame, org string, private bool) (*domain.Repository, error) {
-	user, err := interactor.UserRepo.RetrieveByUserName(username)
-	if err != nil {
-		return nil, err
-	}
-	ts := oauth2.StaticTokenSource(
-		&oauth2.Token{AccessToken: user.AccessToken},
-	)
-	tc := oauth2.NewClient(oauth2.NoContext, ts)
-
-	client := github.NewClient(tc)
+func (interactor GHInteractor) CreateRepo(username, token, reponame, org string, private bool) (*domain.Repository, error) {
+	client := getClient(token)
 
 	repo := &github.Repository{
 		Name:    github.String(reponame),
 		Private: github.Bool(private),
 	}
-	repo, _, err = client.Repositories.Create(org, repo)
+	repo, _, err := client.Repositories.Create(org, repo)
 
 	if err != nil {
 		return nil, err
@@ -82,18 +64,9 @@ func (interactor GHInteractor) CreateRepo(username, reponame, org string, privat
 	return r, nil
 }
 
-func (interactor GHInteractor) ShowRepo(username, repo string) (*domain.Repository, error) {
+func (interactor GHInteractor) ShowRepo(username, token, repo string) (*domain.Repository, error) {
 
-	user, err := interactor.UserRepo.RetrieveByUserName(username)
-	if err != nil {
-		return nil, err
-	}
-	ts := oauth2.StaticTokenSource(
-		&oauth2.Token{AccessToken: user.AccessToken},
-	)
-	tc := oauth2.NewClient(oauth2.NoContext, ts)
-
-	client := github.NewClient(tc)
+	client := getClient(token)
 
 	rp, _, err := client.Repositories.Get(username, repo)
 	if err != nil {

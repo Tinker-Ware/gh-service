@@ -47,9 +47,7 @@ func main() {
 		Endpoint:     ghoauth.Endpoint,
 	}
 
-	userRepo := interfaces.UserRepo{}
 	ghinteractor := usecases.GHInteractor{
-		UserRepo:    userRepo,
 		OauthConfig: oauth2client,
 	}
 

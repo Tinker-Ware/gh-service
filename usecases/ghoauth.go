@@ -13,15 +13,7 @@ import (
 	"golang.org/x/oauth2"
 )
 
-type UserRepo interface {
-	Store(user domain.User) error
-	RetrieveByID(id int64) (*domain.User, error)
-	RetrieveByUserName(username string) (*domain.User, error)
-	Update(incUser domain.User) error
-}
-
 type GHInteractor struct {
-	UserRepo    UserRepo
 	OauthConfig *oauth2.Config
 }
 
@@ -63,19 +55,35 @@ func (interactor GHInteractor) GHCallback(code, state, incomingState string) (*d
 		AccessToken: token.AccessToken,
 	}
 
-	interactor.UserRepo.Store(usr)
-
 	return &usr, nil
 }
 
-func (interactor GHInteractor) ShowUser(username string) (*domain.User, error) {
+func (interactor GHInteractor) ShowUser(username, token string) (*domain.User, error) {
 
-	user, err := interactor.UserRepo.RetrieveByUserName(username)
+	client := getClient(token)
+	user, _, err := client.Users.Get(username)
+
 	if err != nil {
 		return nil, err
 	}
 
-	return user, nil
+	usr := domain.User{
+		ID:       *user.ID,
+		Username: *user.Login,
+	}
+
+	return &usr, nil
+}
+
+func getClient(token string) *github.Client {
+	ts := oauth2.StaticTokenSource(
+		&oauth2.Token{AccessToken: token},
+	)
+	tc := oauth2.NewClient(oauth2.NoContext, ts)
+
+	client := github.NewClient(tc)
+	return client
+
 }
 
 func randSeq(n int) string {
