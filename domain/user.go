@@ -29,3 +29,12 @@ type Key struct {
 	Title *string `json:"title,omitempty"`
 	URL   *string `json:"url,omitempty"`
 }
+
+type File struct {
+	Path    string `json:"path"`
+	Content []byte `json:"content"`
+	Author  string `json:"author"`
+	Message string `json:"message"`
+	Branch  string `json:"branch,omitempty"`
+	Email   string `json:"email"`
+}
