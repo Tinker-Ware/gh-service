@@ -87,6 +87,26 @@ var _ = Describe("Usecases", func() {
 
 		})
 
+		Context("Test file functionality", func() {
+
+			dt := "IyBIZWxsbwo="
+			file := domain.File{
+				Path:    "test.md",
+				Content: []byte(dt),
+				Author:  "iasstest",
+				Message: "Add file",
+				Branch:  "master",
+				Email:   "infraestructuretest@gmail.com",
+			}
+
+			It("Should create a file in the repo", func() {
+				err := interactor.CreateFile(file, username, reponame, token)
+				Ω(err).ShouldNot(HaveOccurred())
+
+			})
+
+		})
+
 	})
 
 	AfterSuite(func() {
