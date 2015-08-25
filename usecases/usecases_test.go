@@ -12,6 +12,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
+	"github.com/gh-service/domain"
 	. "github.com/gh-service/usecases"
 	ghoauth "golang.org/x/oauth2/github"
 )
@@ -24,27 +25,29 @@ var _ = Describe("Usecases", func() {
 	var userToken = "123tamarindo"
 	var clientID = "0d14937151de189d07a9"
 	var clientSecret = "f37ca3601f3822ac37a02f51efe60843e528d4a9"
+	var keyID = 0
 
 	BeforeSuite(func() {
 		id, token, _ = getToken(clientID, clientSecret, username, userToken)
 	})
 
-	Describe("Test Repo funcionality", func() {
+	Describe("Test interactor functionality", func() {
 
-		Context("With an interactor and a test app", func() {
+		oauth2client := &oauth2.Config{
+			ClientID:     clientID,
+			ClientSecret: clientSecret,
+			Scopes:       []string{"user:email", "delete_repo", "repo", "admin:public_key"},
+			Endpoint:     ghoauth.Endpoint,
+		}
 
-			oauth2client := &oauth2.Config{
-				ClientID:     clientID,
-				ClientSecret: clientSecret,
-				Scopes:       []string{"user:email", "delete_repo", "repo", "admin:public_key"},
-				Endpoint:     ghoauth.Endpoint,
-			}
+		interactor := GHInteractor{
+			OauthConfig: oauth2client,
+		}
 
-			interactor := GHInteractor{
-				OauthConfig: oauth2client,
-			}
+		reponame := "test"
 
-			reponame := "test"
+		Context("Test repo functionality", func() {
+
 			It("Should create a repo with the test account", func() {
 				repo, err := interactor.CreateRepo(username, token, reponame, "", false)
 
@@ -61,11 +64,35 @@ var _ = Describe("Usecases", func() {
 
 		})
 
+		Context("Test public key functionality", func() {
+			key := domain.Key{
+				Title: github.String("TestKey"),
+				Key:   github.String("ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCz98siv2mHLiyk4MT1c6kA5BKlrLejRCpUOSHiCDcCxYN0aPbWfDRW7qMMyUrrCIcRXyd+ZPKn3O0FyDI/HKOFn3qn7PFawnG/1u6cg1H9TvPYmohQuNPt9gArmxdkecl9tFXamrSo3K3H2Uyb3RA9Q0c9NW4XDr/k1tSijSdZkhHf0tGgAuF28YGiXbri38oZsDPVkR24UajLQPfdHTFUAvmXjde7WKTU2I6zvOY/vEoaVSG5Tfnk+LsDp2L4wbl5SkMzZ6GjaQ/kn+6HBuznnSX3g0AEp9y9JiWd+YRAm46dKeRkzDm65dNP1FO/4Ovp2Xm599GB47su47DJ/2qV vagrant@web"),
+			}
+
+			It("Should Create a Key", func() {
+				err := interactor.CreateKey(username, token, &key)
+				Ω(err).ShouldNot(HaveOccurred())
+
+				Ω(*key.ID).ShouldNot(BeZero())
+				keyID = *key.ID
+			})
+
+			It("Should list all keys", func() {
+				keys, err := interactor.ShowKeys(username, token)
+				Ω(err).ShouldNot(HaveOccurred())
+
+				Ω(keys).Should(HaveLen(1))
+			})
+
+		})
+
 	})
 
 	AfterSuite(func() {
 		deleteRepo("test", username, token)
 		deleteToken(id, username, userToken)
+		deleteKey(keyID, userToken)
 	})
 
 })
@@ -116,6 +143,16 @@ func getToken(clientID, clientSecret, username, userToken string) (int, string, 
 
 	return respT.ID, respT.Token, nil
 
+}
+
+func deleteKey(id int, userToken string) {
+	ts := oauth2.StaticTokenSource(
+		&oauth2.Token{AccessToken: userToken},
+	)
+	tc := oauth2.NewClient(oauth2.NoContext, ts)
+
+	client := github.NewClient(tc)
+	client.Users.DeleteKey(id)
 }
 
 func deleteToken(id int, username, userToken string) {
