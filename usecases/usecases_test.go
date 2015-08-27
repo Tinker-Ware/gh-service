@@ -80,6 +80,7 @@ var _ = Describe("Usecases", func() {
 
 			It("Should list all keys", func() {
 				keys, err := interactor.ShowKeys(username, token)
+
 				Ω(err).ShouldNot(HaveOccurred())
 
 				Ω(keys).Should(HaveLen(1))
@@ -89,7 +90,7 @@ var _ = Describe("Usecases", func() {
 
 		Context("Test file functionality", func() {
 
-			dt := "IyBIZWxsbwo="
+			dt := "# Hello"
 			file := domain.File{
 				Path:    "test.md",
 				Content: []byte(dt),
@@ -111,8 +112,8 @@ var _ = Describe("Usecases", func() {
 
 	AfterSuite(func() {
 		deleteRepo("test", username, token)
-		deleteToken(id, username, userToken)
 		deleteKey(keyID, userToken)
+		deleteToken(id, username, userToken)
 	})
 
 })

@@ -37,6 +37,7 @@ type GHInteractor interface {
 	ShowKeys(username, token string) ([]domain.Key, error)
 	CreateKey(username, token string, key *domain.Key) error
 	ShowKey(username, token string, id int) (*domain.Key, error)
+	CreateFile(file domain.File, username, repo, token string) error
 }
 
 type WebServiceHandler struct {
@@ -268,6 +269,33 @@ func (handler WebServiceHandler) ShowKey(res http.ResponseWriter, req *http.Requ
 	res.Header().Set("Content-Type", "application/json; charset=utf-8")
 	res.WriteHeader(http.StatusOK)
 	res.Write([]byte(keyB))
+
+}
+
+func (handler WebServiceHandler) AddFileToRepository(res http.ResponseWriter, req *http.Request) {
+	vars := mux.Vars(req)
+	username := vars["username"]
+	repoName := vars["repo"]
+
+	token := req.Header.Get(domain.TokenHeader)
+
+	decoder := json.NewDecoder(req.Body)
+	file := domain.File{}
+	err := decoder.Decode(&file)
+	if err != nil {
+		fmt.Println(err.Error())
+		res.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	err = handler.GHInteractor.CreateFile(file, username, repoName, token)
+	if err != nil {
+		fmt.Println(err.Error())
+		res.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	res.WriteHeader(http.StatusCreated)
 
 }
 
