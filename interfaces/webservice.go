@@ -27,6 +27,11 @@ type repoRequest struct {
 	Org     string `json:"org"`
 }
 
+type fileRequest struct {
+	domain.Author
+	domain.File
+}
+
 type GHInteractor interface {
 	GHCallback(code, state, incomingState string) (*domain.User, error)
 	GHLogin() (string, string)
@@ -37,7 +42,7 @@ type GHInteractor interface {
 	ShowKeys(username, token string) ([]domain.Key, error)
 	CreateKey(username, token string, key *domain.Key) error
 	ShowKey(username, token string, id int) (*domain.Key, error)
-	CreateFile(file domain.File, username, repo, token string) error
+	CreateFile(file domain.File, author domain.Author, username, repo, token string) error
 }
 
 type WebServiceHandler struct {
@@ -280,7 +285,7 @@ func (handler WebServiceHandler) AddFileToRepository(res http.ResponseWriter, re
 	token := req.Header.Get(domain.TokenHeader)
 
 	decoder := json.NewDecoder(req.Body)
-	file := domain.File{}
+	file := fileRequest{}
 	err := decoder.Decode(&file)
 	if err != nil {
 		fmt.Println(err.Error())
@@ -288,7 +293,7 @@ func (handler WebServiceHandler) AddFileToRepository(res http.ResponseWriter, re
 		return
 	}
 
-	err = handler.GHInteractor.CreateFile(file, username, repoName, token)
+	err = handler.GHInteractor.CreateFile(file.File, file.Author, username, repoName, token)
 	if err != nil {
 		fmt.Println(err.Error())
 		res.WriteHeader(http.StatusInternalServerError)

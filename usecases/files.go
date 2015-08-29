@@ -5,16 +5,16 @@ import (
 	"github.com/google/go-github/github"
 )
 
-func (interactor GHInteractor) CreateFile(file domain.File, username, repo, token string) error {
+func (interactor GHInteractor) CreateFile(file domain.File, author domain.Author, username, repo, token string) error {
 	client := getClient(token)
 
 	opt := &github.RepositoryContentFileOptions{
-		Message: github.String(file.Message),
+		Message: github.String(author.Message),
 		Content: file.Content,
-		Branch:  github.String(file.Branch),
+		Branch:  github.String(author.Branch),
 		Committer: &github.CommitAuthor{
-			Name:  github.String(file.Author),
-			Email: github.String(file.Email),
+			Name:  github.String(author.Author),
+			Email: github.String(author.Email),
 		},
 	}
 

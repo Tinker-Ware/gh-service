@@ -33,6 +33,9 @@ type Key struct {
 type File struct {
 	Path    string `json:"path"`
 	Content []byte `json:"content"`
+}
+
+type Author struct {
 	Author  string `json:"author"`
 	Message string `json:"message"`
 	Branch  string `json:"branch,omitempty"`
