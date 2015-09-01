@@ -32,6 +32,11 @@ type fileRequest struct {
 	domain.File
 }
 
+type multipleFilesRequest struct {
+	Author domain.Author `json:"author"`
+	Files  []domain.File `json:"files"`
+}
+
 type GHInteractor interface {
 	GHCallback(code, state, incomingState string) (*domain.User, error)
 	GHLogin() (string, string)
@@ -43,6 +48,7 @@ type GHInteractor interface {
 	CreateKey(username, token string, key *domain.Key) error
 	ShowKey(username, token string, id int) (*domain.Key, error)
 	CreateFile(file domain.File, author domain.Author, username, repo, token string) error
+	AddFiles(files []domain.File, author domain.Author, username, repo, token string) error
 }
 
 type WebServiceHandler struct {
@@ -296,6 +302,34 @@ func (handler WebServiceHandler) AddFileToRepository(res http.ResponseWriter, re
 	err = handler.GHInteractor.CreateFile(file.File, file.Author, username, repoName, token)
 	if err != nil {
 		fmt.Println(err.Error())
+		res.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	res.WriteHeader(http.StatusCreated)
+
+}
+
+func (handler WebServiceHandler) AddMultipleFilesToRepository(res http.ResponseWriter, req *http.Request) {
+	defer req.Body.Close()
+
+	vars := mux.Vars(req)
+	username := vars["username"]
+	repoName := vars["repo"]
+
+	token := req.Header.Get(domain.TokenHeader)
+
+	decoder := json.NewDecoder(req.Body)
+
+	request := multipleFilesRequest{}
+
+	err := decoder.Decode(&request)
+	if err != nil {
+		res.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	err = handler.GHInteractor.AddFiles(request.Files, request.Author, username, repoName, token)
+	if err != nil {
 		res.WriteHeader(http.StatusInternalServerError)
 		return
 	}
