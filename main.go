@@ -70,6 +70,7 @@ func main() {
 	subrouter.HandleFunc("/user/{username}/keys", handler.CreateKey).Methods("POST")
 	subrouter.HandleFunc("/user/{username}/keys/{id}", handler.ShowKey).Methods("GET")
 	subrouter.HandleFunc("/user/{username}/{repo}", handler.ShowRepo).Methods("GET")
+	subrouter.HandleFunc("/user/{username}/{repo}/addfile", handler.AddFileToRepository).Methods("POST")
 	subrouter.HandleFunc("/user_info", handler.GetCurrentUser).Methods("GET")
 
 	n := negroni.Classic()

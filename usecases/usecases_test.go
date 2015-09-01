@@ -80,9 +80,30 @@ var _ = Describe("Usecases", func() {
 
 			It("Should list all keys", func() {
 				keys, err := interactor.ShowKeys(username, token)
+
 				Ω(err).ShouldNot(HaveOccurred())
 
 				Ω(keys).Should(HaveLen(1))
+			})
+
+		})
+
+		Context("Test file functionality", func() {
+
+			dt := "# Hello"
+			file := domain.File{
+				Path:    "test.md",
+				Content: []byte(dt),
+				Author:  "iasstest",
+				Message: "Add file",
+				Branch:  "master",
+				Email:   "infraestructuretest@gmail.com",
+			}
+
+			It("Should create a file in the repo", func() {
+				err := interactor.CreateFile(file, username, reponame, token)
+				Ω(err).ShouldNot(HaveOccurred())
+
 			})
 
 		})
@@ -91,8 +112,8 @@ var _ = Describe("Usecases", func() {
 
 	AfterSuite(func() {
 		deleteRepo("test", username, token)
-		deleteToken(id, username, userToken)
 		deleteKey(keyID, userToken)
+		deleteToken(id, username, userToken)
 	})
 
 })
