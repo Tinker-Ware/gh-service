@@ -111,10 +111,38 @@ var _ = Describe("Usecases", func() {
 
 		})
 
+		Context("Add multiple files", func() {
+			repo := "multipleFiles"
+			files := []domain.File{{
+				Path:    "Bye.md",
+				Content: []byte("# Bye"),
+			},
+				{
+					Path:    "folder/Hello.md",
+					Content: []byte("# Hello"),
+				}}
+			author := domain.Author{
+				Author:  "iasstest",
+				Message: "Hello",
+				Branch:  "master",
+				Email:   "infraestructuretest@gmail.com",
+			}
+			It("Should create files in the repo", func() {
+				_, err := interactor.CreateRepo(username, token, repo, "", false)
+				Ω(err).ShouldNot(HaveOccurred())
+
+				err = interactor.AddFiles(files, author, username, repo, token)
+				Ω(err).ShouldNot(HaveOccurred())
+
+			})
+
+		})
+
 	})
 
 	AfterSuite(func() {
 		deleteRepo("test", username, token)
+		deleteRepo("multipleFiles", username, token)
 		deleteKey(keyID, userToken)
 		deleteToken(id, username, userToken)
 	})
