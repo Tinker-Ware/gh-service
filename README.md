@@ -1,3 +1,5 @@
+[![Stories in Ready](https://badge.waffle.io/Tinker-Ware/gh-service.png?label=ready&title=Ready)](http://waffle.io/Tinker-Ware/gh-service)
+
 # Github Service
 
 This is a microservice for the infrastructure as a service environment.
