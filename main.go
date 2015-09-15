@@ -15,6 +15,7 @@ import (
 )
 
 const defaultPath = "/etc/gh-service.conf"
+const apiVersion = "/v1"
 
 // Define configuration flags
 var confFilePath = flag.String("conf", defaultPath, "Custom path for configuration file")
@@ -46,8 +47,10 @@ func main() {
 	}
 
 	r := mux.NewRouter()
-	subrouter := r.PathPrefix("/github").Subrouter()
-	subrouter.Handle("/", interfaces.Adapt(http.HandlerFunc(handler.Root), interfaces.Notify()))
+
+	versionSubrouter := r.PathPrefix(apiVersion).Subrouter()
+
+	subrouter := versionSubrouter.PathPrefix("/github").Subrouter()
 	subrouter.HandleFunc("/login", handler.Login)
 	subrouter.HandleFunc("/github_oauth_cb", handler.Callback)
 	subrouter.Handle("/user/{username}", interfaces.Adapt(http.HandlerFunc(handler.ShowUser), interfaces.Notify(), interfaces.SetToken(ghrepo))).Methods("GET")
