@@ -18,6 +18,7 @@ import (
 )
 
 const defaultPath = "/etc/gh-service.conf"
+const apiVersion = "/v1"
 
 // TODO: DRY client usage in handlers
 // TODO: Cache to avoid multiple calls to the GH API
@@ -59,7 +60,10 @@ func main() {
 	}
 
 	r := mux.NewRouter()
-	subrouter := r.PathPrefix("/github").Subrouter()
+
+	versionSubrouter := r.PathPrefix(apiVersion).Subrouter()
+
+	subrouter := versionSubrouter.PathPrefix("/github").Subrouter()
 	subrouter.HandleFunc("/", handler.Root)
 	subrouter.HandleFunc("/login", handler.Login)
 	subrouter.HandleFunc("/github_oauth_cb", handler.Callback)
