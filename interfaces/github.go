@@ -2,6 +2,7 @@ package interfaces
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/gh-service/domain"
 	"github.com/google/go-github/github"
@@ -10,6 +11,11 @@ import (
 
 type GithubRepository struct {
 	client *github.Client
+}
+
+var README = domain.File{
+	Path:    "README.md",
+	Content: []byte("# This is a README"),
 }
 
 func (repo *GithubRepository) SetToken(token string) {
@@ -53,7 +59,7 @@ func (repo GithubRepository) GetAllRepos(username string) ([]domain.Repository, 
 	return repos, nil
 }
 
-func (repo GithubRepository) GetRepo(username, token, reponame string) (*domain.Repository, error) {
+func (repo GithubRepository) GetRepo(username, reponame string) (*domain.Repository, error) {
 
 	rp, _, err := repo.client.Repositories.Get(username, reponame)
 	if err != nil {
@@ -97,7 +103,7 @@ func (repo GithubRepository) CreateRepo(username, reponame, org string, private 
 	return r, nil
 }
 
-func (repo GithubRepository) GetKey(username, token string, id int) (*domain.Key, error) {
+func (repo GithubRepository) GetKey(username, id int) (*domain.Key, error) {
 	ghkey, _, err := repo.client.Users.GetKey(id)
 	if err != nil {
 		return nil, err
@@ -113,7 +119,7 @@ func (repo GithubRepository) GetKey(username, token string, id int) (*domain.Key
 	return key, nil
 }
 
-func (repo GithubRepository) ShowKeys(username, token string) ([]domain.Key, error) {
+func (repo GithubRepository) ShowKeys(username string) ([]domain.Key, error) {
 	ghKeys, _, err := repo.client.Users.ListKeys(username, nil)
 	if err != nil {
 		fmt.Println(err.Error())
@@ -136,7 +142,7 @@ func (repo GithubRepository) ShowKeys(username, token string) ([]domain.Key, err
 
 }
 
-func (repo GithubRepository) CreateKey(username, token string, key *domain.Key) error {
+func (repo GithubRepository) CreateKey(username string, key *domain.Key) error {
 
 	k := github.Key{
 		Title: key.Title,
@@ -153,4 +159,122 @@ func (repo GithubRepository) CreateKey(username, token string, key *domain.Key) 
 
 	return nil
 
+}
+
+func (repo GithubRepository) CreateFile(file domain.File, author domain.Author, username, repoName string) error {
+
+	opt := &github.RepositoryContentFileOptions{
+		Message: github.String(author.Message),
+		Content: file.Content,
+		Branch:  github.String(author.Branch),
+		Committer: &github.CommitAuthor{
+			Name:  github.String(author.Author),
+			Email: github.String(author.Email),
+		},
+	}
+
+	_, _, err := repo.client.Repositories.CreateFile(username, repoName, file.Path, opt)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (repo GithubRepository) AddFiles(files []domain.File, author domain.Author, username, reponame string) error {
+	tree := []github.TreeEntry{}
+	emptyRepo := "409 Git Repository is empty"
+	lastCommit := ""
+
+	// Get the reference sha
+	// TODO remove hardcoded branch name
+	ghTree, _, err := repo.client.Git.GetRef(username, reponame, "heads/master")
+	if err != nil {
+
+		// if the repo is empty create a README, else unexpected error
+		if strings.Contains(err.Error(), emptyRepo) {
+
+			// Create a copy of author for the initial commit
+			author2 := author
+			author2.Message = "Initial Commit"
+
+			err = repo.CreateFile(README, author2, username, reponame)
+			if err != nil {
+				return err
+			}
+
+			// Repository should not be empty, otherwise, unexpected error
+			ghTree, _, err = repo.client.Git.GetRef(username, reponame, "heads/master")
+			if err != nil {
+				return err
+			}
+
+		} else {
+			return err
+
+		}
+
+	}
+	lastCommit = *ghTree.Ref
+
+	// Create a new tree
+	// TODO Check for existing files and paths
+
+	for _, file := range files {
+		t := github.TreeEntry{
+			Path:    github.String(file.Path),
+			Mode:    github.String("100644"),
+			Type:    github.String("blob"),
+			Content: github.String(string(file.Content)),
+		}
+
+		tree = append(tree, t)
+	}
+
+	// Get the current tree
+	currentTree, _, err := repo.client.Git.GetTree(username, reponame, lastCommit, false)
+	if err != nil {
+		return err
+	}
+
+	// Add the existing files to the tree
+	for _, file := range currentTree.Entries {
+		t := github.TreeEntry{
+			Path: file.Path,
+			Mode: file.Mode,
+			Type: file.Type,
+			SHA:  file.SHA,
+		}
+
+		tree = append(tree, t)
+	}
+
+	newTree, _, err := repo.client.Git.CreateTree(username, reponame, *currentTree.SHA, tree)
+	if err != nil {
+		return err
+	}
+
+	commit := github.Commit{
+		Message: github.String(author.Message),
+		Parents: []github.Commit{{SHA: currentTree.SHA}},
+		Tree:    &github.Tree{SHA: newTree.SHA},
+	}
+
+	newCommit, _, err := repo.client.Git.CreateCommit(username, reponame, &commit)
+	if err != nil {
+		return err
+	}
+
+	reference := github.Reference{
+		Ref: github.String("refs/heads/master"),
+		Object: &github.GitObject{
+			SHA: newCommit.SHA,
+		},
+	}
+
+	_, _, err = repo.client.Git.UpdateRef(username, reponame, &reference, false)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

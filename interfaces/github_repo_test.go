@@ -41,6 +41,13 @@ var _ = Describe("GithubRepo", func() {
 				Ω(*rp.FullName).Should(ContainSubstring(reponame))
 			})
 
+			It("Should retrieve a list of repositories", func() {
+				repos, err := repo.GetAllRepos(username)
+				Ω(err).ShouldNot(HaveOccurred())
+
+				Ω(repos).Should(HaveLen(1))
+			})
+
 		})
 	})
 
@@ -54,7 +61,7 @@ var _ = Describe("GithubRepo", func() {
 			}
 
 			It("Should Create a Key", func() {
-				err := repo.CreateKey(username, token, &key)
+				err := repo.CreateKey(username, &key)
 				Ω(err).ShouldNot(HaveOccurred())
 
 				Ω(*key.ID).ShouldNot(BeZero())
@@ -62,7 +69,7 @@ var _ = Describe("GithubRepo", func() {
 			})
 
 			It("Should list all keys", func() {
-				keys, err := repo.ShowKeys(username, token)
+				keys, err := repo.ShowKeys(username)
 
 				Ω(err).ShouldNot(HaveOccurred())
 
@@ -72,9 +79,37 @@ var _ = Describe("GithubRepo", func() {
 		})
 	})
 
+	Context("Add multiple files", func() {
+		reponame := "multipleFiles"
+		files := []domain.File{{
+			Path:    "Bye.md",
+			Content: []byte("# Bye"),
+		},
+			{
+				Path:    "folder/Hello.md",
+				Content: []byte("# Hello"),
+			}}
+		author := domain.Author{
+			Author:  "iasstest",
+			Message: "Hello",
+			Branch:  "master",
+			Email:   "infraestructuretest@gmail.com",
+		}
+		It("Should create files in the repo", func() {
+			_, err := repo.CreateRepo(username, reponame, "", false)
+			Ω(err).ShouldNot(HaveOccurred())
+
+			err = repo.AddFiles(files, author, username, reponame)
+			Ω(err).ShouldNot(HaveOccurred())
+
+		})
+
+	})
+
 	AfterSuite(func() {
 		deleteKey(keyID, userToken)
 		deleteRepo("test", username, token)
+		deleteRepo("multipleFiles", username, token)
 		deleteToken(id, username, userToken)
 	})
 
