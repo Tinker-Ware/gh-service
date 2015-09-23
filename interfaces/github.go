@@ -96,3 +96,61 @@ func (repo GithubRepository) CreateRepo(username, reponame, org string, private 
 
 	return r, nil
 }
+
+func (repo GithubRepository) GetKey(username, token string, id int) (*domain.Key, error) {
+	ghkey, _, err := repo.client.Users.GetKey(id)
+	if err != nil {
+		return nil, err
+	}
+
+	key := &domain.Key{
+		ID:    ghkey.ID,
+		Title: ghkey.Title,
+		Key:   ghkey.Key,
+		URL:   ghkey.URL,
+	}
+
+	return key, nil
+}
+
+func (repo GithubRepository) ShowKeys(username, token string) ([]domain.Key, error) {
+	ghKeys, _, err := repo.client.Users.ListKeys(username, nil)
+	if err != nil {
+		fmt.Println(err.Error())
+		return nil, err
+	}
+
+	keys := []domain.Key{}
+
+	for _, k := range ghKeys {
+		key := domain.Key{
+			ID:    k.ID,
+			Key:   k.Key,
+			Title: k.Title,
+			URL:   k.URL,
+		}
+		keys = append(keys, key)
+	}
+
+	return keys, nil
+
+}
+
+func (repo GithubRepository) CreateKey(username, token string, key *domain.Key) error {
+
+	k := github.Key{
+		Title: key.Title,
+		Key:   key.Key,
+	}
+
+	ghK, _, err := repo.client.Users.CreateKey(&k)
+	if err != nil {
+		return err
+	}
+
+	key.ID = ghK.ID
+	key.URL = ghK.URL
+
+	return nil
+
+}

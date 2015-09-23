@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/gh-service/domain"
 	. "github.com/gh-service/interfaces"
 	"github.com/google/go-github/github"
 	"golang.org/x/oauth2"
@@ -16,6 +17,7 @@ import (
 
 var _ = Describe("GithubRepo", func() {
 	var id = 0
+	var keyID = 0
 	var token = ""
 	var username = "iasstest"
 	var userToken = "123tamarindo"
@@ -42,7 +44,36 @@ var _ = Describe("GithubRepo", func() {
 		})
 	})
 
+	Describe("Test key functionality", func() {
+		Context("With a test key", func() {
+			strKey := "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCz98siv2mHLiyk4MT1c6kA5BKlrLejRCpUOSHiCDcCxYN0aPbWfDRW7qMMyUrrCIcRXyd+ZPKn3O0FyDI/HKOFn3qn7PFawnG/1u6cg1H9TvPYmohQuNPt9gArmxdkecl9tFXamrSo3K3H2Uyb3RA9Q0c9NW4XDr/k1tSijSdZkhHf0tGgAuF28YGiXbri38oZsDPVkR24UajLQPfdHTFUAvmXjde7WKTU2I6zvOY/vEoaVSG5Tfnk+LsDp2L4wbl5SkMzZ6GjaQ/kn+6HBuznnSX3g0AEp9y9JiWd+YRAm46dKeRkzDm65dNP1FO/4Ovp2Xm599GB47su47DJ/2qV vagrant@web"
+
+			key := domain.Key{
+				Title: github.String("TestKey"),
+				Key:   github.String(strKey),
+			}
+
+			It("Should Create a Key", func() {
+				err := repo.CreateKey(username, token, &key)
+				Ω(err).ShouldNot(HaveOccurred())
+
+				Ω(*key.ID).ShouldNot(BeZero())
+				keyID = *key.ID
+			})
+
+			It("Should list all keys", func() {
+				keys, err := repo.ShowKeys(username, token)
+
+				Ω(err).ShouldNot(HaveOccurred())
+
+				Ω(keys).Should(HaveLen(1))
+			})
+
+		})
+	})
+
 	AfterSuite(func() {
+		deleteKey(keyID, userToken)
 		deleteRepo("test", username, token)
 		deleteToken(id, username, userToken)
 	})
