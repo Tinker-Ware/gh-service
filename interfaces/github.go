@@ -1,21 +1,75 @@
 package interfaces
 
 import (
+	"errors"
 	"fmt"
+	"math/rand"
 	"strings"
+	"time"
 
 	"github.com/gh-service/domain"
 	"github.com/google/go-github/github"
 	"golang.org/x/oauth2"
+
+	ghoauth "golang.org/x/oauth2/github"
 )
 
 type GithubRepository struct {
-	client *github.Client
+	client      *github.Client
+	oauthConfig *oauth2.Config
+}
+
+func NewGithubRepository(clientID, clientSecret string, scopes []string) (*GithubRepository, error) {
+
+	oauth2client := &oauth2.Config{
+		ClientID:     clientID,
+		ClientSecret: clientSecret,
+		Scopes:       scopes,
+		Endpoint:     ghoauth.Endpoint,
+	}
+
+	repo := &GithubRepository{
+		oauthConfig: oauth2client,
+	}
+
+	return repo, nil
 }
 
 var README = domain.File{
 	Path:    "README.md",
 	Content: []byte("# This is a README"),
+}
+
+var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+
+func (repo GithubRepository) GetOauthURL() (string, string) {
+	oauthStateString := randSeq(10)
+	url := repo.oauthConfig.AuthCodeURL(oauthStateString, oauth2.AccessTypeOnline)
+	return url, oauthStateString
+}
+
+func (repo GithubRepository) GetRepository(code, givenState, incomingStates string) (*domain.User, error) {
+
+	token, err := repo.oauthConfig.Exchange(oauth2.NoContext, code)
+	if err != nil {
+		// TODO: Log with interactor Logger not yet implemented
+		fmt.Printf("oauthConf.Exchange() failed with '%s'\n", err.Error())
+		return nil, err
+	}
+
+	oauthClient := repo.oauthConfig.Client(oauth2.NoContext, token)
+	client := github.NewClient(oauthClient)
+	user, _, err := client.Users.Get("")
+	if err != nil {
+		return nil, errors.New("Cannot retrieve User data")
+	}
+
+	usr := domain.User{
+		Username:    *user.Login,
+		AccessToken: token.AccessToken,
+	}
+
+	return &usr, nil
 }
 
 func (repo *GithubRepository) SetToken(token string) {
@@ -277,4 +331,13 @@ func (repo GithubRepository) AddFiles(files []domain.File, author domain.Author,
 	}
 
 	return nil
+}
+
+func randSeq(n int) string {
+	rand.Seed(time.Now().UTC().UnixNano())
+	b := make([]rune, n)
+	for i := range b {
+		b[i] = letters[rand.Intn(len(letters))]
+	}
+	return string(b)
 }

@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"net/url"
+
 	"github.com/gh-service/domain"
 	. "github.com/gh-service/interfaces"
 	"github.com/google/go-github/github"
@@ -23,15 +25,32 @@ var _ = Describe("GithubRepo", func() {
 	var userToken = "123tamarindo"
 	var clientID = "0d14937151de189d07a9"
 	var clientSecret = "f37ca3601f3822ac37a02f51efe60843e528d4a9"
+	var scopes = []string{"user:email", "delete_repo", "repo", "admin:public_key"}
 	var repo = &GithubRepository{}
 
 	BeforeSuite(func() {
 		id, token, _ = getToken(clientID, clientSecret, username, userToken)
-		repo = &GithubRepository{}
+		repo, _ = NewGithubRepository(clientID, clientID, scopes)
 		repo.SetToken(token)
 	})
 
 	reponame := "test"
+
+	Describe("Test Oauth functionality", func() {
+		Context("Get a oauth URL", func() {
+			It("Should return a correctly formed url", func() {
+				oauthURL, state := repo.GetOauthURL()
+				Ω(oauthURL).Should(ContainSubstring(clientID))
+				Ω(oauthURL).Should(ContainSubstring(state))
+				Ω(oauthURL).Should(ContainSubstring(url.QueryEscape(scopes[0])))
+				Ω(oauthURL).Should(ContainSubstring(url.QueryEscape(scopes[1])))
+				Ω(oauthURL).Should(ContainSubstring(url.QueryEscape(scopes[2])))
+				Ω(oauthURL).Should(ContainSubstring(url.QueryEscape(scopes[3])))
+			})
+
+		})
+	})
+
 	Describe("Test repo funcionality", func() {
 		Context("Create a new repo", func() {
 
@@ -45,7 +64,7 @@ var _ = Describe("GithubRepo", func() {
 				repos, err := repo.GetAllRepos(username)
 				Ω(err).ShouldNot(HaveOccurred())
 
-				Ω(repos).Should(HaveLen(1))
+				Ω(repos).ShouldNot(HaveLen(0))
 			})
 
 		})
