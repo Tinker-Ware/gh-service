@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"flag"
 	"fmt"
+	"net/http"
 
 	"golang.org/x/oauth2"
 
@@ -19,14 +20,6 @@ import (
 
 const defaultPath = "/etc/gh-service.conf"
 
-// TODO: DRY client usage in handlers
-// TODO: Cache to avoid multiple calls to the GH API
-// TODO: Pass the token in the header to delegate the management to another microservice
-// TODO: Once the token is passed via header change the routes to add org support in repo listing
-// TODO: Remove struct types in Webservice and use the domain structs
-// TODO: Figure out how to get a token without OAUTH to use tests
-// TODO: Inject GH API data from here
-
 // Define configuration flags
 var confFilePath = flag.String("conf", defaultPath, "Custom path for configuration file")
 
@@ -40,6 +33,11 @@ func main() {
 		panic("Cannot parse configuration")
 	}
 
+	ghrepo, err := interfaces.NewGithubRepository(config.ClientID, config.ClientSecret, config.Scopes)
+	if err != nil {
+		panic(err.Error())
+	}
+
 	oauth2client := &oauth2.Config{
 		ClientID:     config.ClientID,
 		ClientSecret: config.ClientSecret,
@@ -48,7 +46,8 @@ func main() {
 	}
 
 	ghinteractor := usecases.GHInteractor{
-		OauthConfig: oauth2client,
+		OauthConfig:      oauth2client,
+		GithubRepository: ghrepo,
 	}
 
 	store := sessions.NewCookieStore([]byte("something-very-secret"))
@@ -60,18 +59,18 @@ func main() {
 
 	r := mux.NewRouter()
 	subrouter := r.PathPrefix("/github").Subrouter()
-	subrouter.HandleFunc("/", handler.Root)
+	subrouter.Handle("/", interfaces.Adapt(http.HandlerFunc(handler.Root), interfaces.Notify()))
 	subrouter.HandleFunc("/login", handler.Login)
 	subrouter.HandleFunc("/github_oauth_cb", handler.Callback)
-	subrouter.HandleFunc("/user/{username}", handler.ShowUser).Methods("GET")
-	subrouter.HandleFunc("/user/{username}/repos", handler.ShowRepos).Methods("GET")
-	subrouter.HandleFunc("/user/{username}/repos", handler.CreateRepo).Methods("POST")
-	subrouter.HandleFunc("/user/{username}/keys", handler.ShowKeys).Methods("GET")
-	subrouter.HandleFunc("/user/{username}/keys", handler.CreateKey).Methods("POST")
-	subrouter.HandleFunc("/user/{username}/keys/{id}", handler.ShowKey).Methods("GET")
-	subrouter.HandleFunc("/user/{username}/{repo}", handler.ShowRepo).Methods("GET")
-	subrouter.HandleFunc("/user/{username}/{repo}/addfile", handler.AddFileToRepository).Methods("POST")
-	subrouter.HandleFunc("/user/{username}/{repo}/addfiles", handler.AddMultipleFilesToRepository).Methods("POST")
+	subrouter.Handle("/user/{username}", interfaces.Adapt(http.HandlerFunc(handler.ShowUser), interfaces.Notify(), interfaces.SetToken(ghrepo))).Methods("GET")
+	subrouter.Handle("/user/{username}/repos", interfaces.Adapt(http.HandlerFunc(handler.ShowRepos), interfaces.Notify(), interfaces.SetToken(ghrepo))).Methods("GET")
+	subrouter.Handle("/user/{username}/repos", interfaces.Adapt(http.HandlerFunc(handler.CreateRepo), interfaces.Notify(), interfaces.SetToken(ghrepo))).Methods("POST")
+	subrouter.Handle("/user/{username}/keys", interfaces.Adapt(http.HandlerFunc(handler.CreateRepo), interfaces.Notify(), interfaces.SetToken(ghrepo))).Methods("GET")
+	subrouter.Handle("/user/{username}/keys", interfaces.Adapt(http.HandlerFunc(handler.CreateKey), interfaces.Notify(), interfaces.SetToken(ghrepo))).Methods("POST")
+	subrouter.Handle("/user/{username}/keys/{id}", interfaces.Adapt(http.HandlerFunc(handler.ShowKey), interfaces.Notify(), interfaces.SetToken(ghrepo))).Methods("GET")
+	subrouter.Handle("/user/{username}/{repo}", interfaces.Adapt(http.HandlerFunc(handler.ShowRepo), interfaces.Notify(), interfaces.SetToken(ghrepo))).Methods("GET")
+	subrouter.Handle("/user/{username}/{repo}/addfile", interfaces.Adapt(http.HandlerFunc(handler.AddFileToRepository), interfaces.Notify(), interfaces.SetToken(ghrepo))).Methods("POST")
+	subrouter.Handle("/user/{username}/{repo}/addfiles", interfaces.Adapt(http.HandlerFunc(handler.AddMultipleFilesToRepository), interfaces.Notify(), interfaces.SetToken(ghrepo))).Methods("POST")
 	subrouter.HandleFunc("/user_info", handler.GetCurrentUser).Methods("GET")
 
 	n := negroni.Classic()
