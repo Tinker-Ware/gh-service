@@ -72,6 +72,22 @@ func (repo GithubRepository) GetRepository(code, givenState, incomingStates stri
 	return &usr, nil
 }
 
+func (repo *GithubRepository) GetUser(username string) (*domain.User, error) {
+	user, _, err := repo.client.Users.Get(username)
+
+	if err != nil {
+		return nil, err
+	}
+
+	usr := domain.User{
+		ID:       *user.ID,
+		Username: *user.Login,
+	}
+
+	return &usr, nil
+
+}
+
 func (repo *GithubRepository) SetToken(token string) {
 
 	ts := oauth2.StaticTokenSource(
