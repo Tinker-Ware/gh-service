@@ -13,8 +13,8 @@ import (
 	. "github.com/onsi/gomega"
 
 	"github.com/gh-service/domain"
+	"github.com/gh-service/interfaces"
 	. "github.com/gh-service/usecases"
-	ghoauth "golang.org/x/oauth2/github"
 )
 
 var _ = Describe("Usecases", func() {
@@ -25,24 +25,25 @@ var _ = Describe("Usecases", func() {
 	var userToken = "123tamarindo"
 	var clientID = "0d14937151de189d07a9"
 	var clientSecret = "f37ca3601f3822ac37a02f51efe60843e528d4a9"
+	var scopes = []string{"user:email", "delete_repo", "repo", "admin:public_key"}
 	var keyID = 0
+	var interactor = GHInteractor{}
 
 	BeforeSuite(func() {
 		id, token, _ = getToken(clientID, clientSecret, username, userToken)
+		ghrepo, err := interfaces.NewGithubRepository(clientID, clientSecret, scopes)
+		if err != nil {
+			panic(err.Error())
+		}
+
+		ghrepo.SetToken(token)
+		interactor = GHInteractor{
+			GithubRepository: ghrepo,
+		}
+
 	})
 
 	Describe("Test interactor functionality", func() {
-
-		oauth2client := &oauth2.Config{
-			ClientID:     clientID,
-			ClientSecret: clientSecret,
-			Scopes:       []string{"user:email", "delete_repo", "repo", "admin:public_key"},
-			Endpoint:     ghoauth.Endpoint,
-		}
-
-		interactor := GHInteractor{
-			OauthConfig: oauth2client,
-		}
 
 		reponame := "test"
 
@@ -56,7 +57,7 @@ var _ = Describe("Usecases", func() {
 			})
 
 			It("Should retrieve a list of repositories", func() {
-				repos, err := interactor.ShowRepos(username, token)
+				repos, err := interactor.ShowRepos(username)
 				Ω(err).ShouldNot(HaveOccurred())
 
 				Ω(repos).Should(HaveLen(1))
@@ -79,7 +80,7 @@ var _ = Describe("Usecases", func() {
 			})
 
 			It("Should list all keys", func() {
-				keys, err := interactor.ShowKeys(username, token)
+				keys, err := interactor.ShowKeys(username)
 
 				Ω(err).ShouldNot(HaveOccurred())
 
@@ -104,7 +105,7 @@ var _ = Describe("Usecases", func() {
 			}
 
 			It("Should create a file in the repo", func() {
-				err := interactor.CreateFile(file, author, username, reponame, token)
+				err := interactor.CreateFile(file, author, username, reponame)
 				Ω(err).ShouldNot(HaveOccurred())
 
 			})
@@ -131,7 +132,7 @@ var _ = Describe("Usecases", func() {
 				_, err := interactor.CreateRepo(username, token, repo, "", false)
 				Ω(err).ShouldNot(HaveOccurred())
 
-				err = interactor.AddFiles(files, author, username, repo, token)
+				err = interactor.AddFiles(files, author, username, repo)
 				Ω(err).ShouldNot(HaveOccurred())
 
 			})

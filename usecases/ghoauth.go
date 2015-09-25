@@ -1,20 +1,29 @@
 package usecases
 
 import (
-	"encoding/json"
-	"errors"
-	"fmt"
-	"math/rand"
-	"time"
-
 	"github.com/gh-service/domain"
-	"github.com/google/go-github/github"
 
 	"golang.org/x/oauth2"
 )
 
 type GHInteractor struct {
-	OauthConfig *oauth2.Config
+	OauthConfig      *oauth2.Config
+	GithubRepository GithubRepository
+}
+
+type GithubRepository interface {
+	GetOauthURL() (string, string)
+	GetToken(code, givenState, incomingStates string) (*domain.User, error)
+	SetToken(token string)
+	GetAllRepos(username string) ([]domain.Repository, error)
+	GetRepo(username, reponame string) (*domain.Repository, error)
+	CreateRepo(username, reponame, org string, private bool) (*domain.Repository, error)
+	GetKey(username string, id int) (*domain.Key, error)
+	ShowKeys(username string) ([]domain.Key, error)
+	CreateKey(username string, key *domain.Key) error
+	CreateFile(file domain.File, author domain.Author, username, repoName string) error
+	AddFiles(files []domain.File, author domain.Author, username, reponame string) error
+	GetUser(username string) (*domain.User, error)
 }
 
 var (
@@ -22,91 +31,26 @@ var (
 )
 
 func (interactor GHInteractor) GHLogin() (string, string) {
-	oauthStateString := randSeq(10)
-	url := interactor.OauthConfig.AuthCodeURL(oauthStateString, oauth2.AccessTypeOnline)
+	url, oauthStateString := interactor.GithubRepository.GetOauthURL()
 	return url, oauthStateString
 
 }
 
 func (interactor GHInteractor) GHCallback(code, state, incomingState string) (*domain.User, error) {
 
-	// TODO: Implement this later
-	// if state != incomingState {
-	// 	fmt.Printf("invalid oauth state, expected '%s', got '%s'\n", incomingState, state)
-	// 	return nil, errors.New("Invalid Oauth2 state")
-	// }
-
-	token, err := interactor.OauthConfig.Exchange(oauth2.NoContext, code)
+	usr, err := interactor.GithubRepository.GetToken(code, state, incomingState)
 	if err != nil {
-		// TODO: Log with interactor Logger not yet implemented
-		fmt.Printf("oauthConf.Exchange() failed with '%s'\n", err.Error())
 		return nil, err
 	}
-
-	oauthClient := interactor.OauthConfig.Client(oauth2.NoContext, token)
-	client := github.NewClient(oauthClient)
-	user, _, err := client.Users.Get("")
-	if err != nil {
-		return nil, errors.New("Cannot retrieve User data")
-	}
-
-	usr := domain.User{
-		Username:    *user.Login,
-		AccessToken: token.AccessToken,
-	}
-
-	return &usr, nil
+	return usr, nil
 }
 
 func (interactor GHInteractor) ShowUser(username, token string) (*domain.User, error) {
 
-	client := getClient(token)
-	user, _, err := client.Users.Get(username)
-
+	usr, err := interactor.GithubRepository.GetUser(username)
 	if err != nil {
 		return nil, err
 	}
 
-	usr := domain.User{
-		ID:       *user.ID,
-		Username: *user.Login,
-	}
-
-	return &usr, nil
-}
-
-func getClient(token string) *github.Client {
-	ts := oauth2.StaticTokenSource(
-		&oauth2.Token{AccessToken: token},
-	)
-	tc := oauth2.NewClient(oauth2.NoContext, ts)
-
-	client := github.NewClient(tc)
-	return client
-
-}
-
-func randSeq(n int) string {
-	rand.Seed(time.Now().UTC().UnixNano())
-	b := make([]rune, n)
-	for i := range b {
-		b[i] = letters[rand.Intn(len(letters))]
-	}
-	return string(b)
-}
-
-func tokenToJSON(token *oauth2.Token) (string, error) {
-	if d, err := json.Marshal(token); err != nil {
-		return "", err
-	} else {
-		return string(d), nil
-	}
-}
-
-func tokenFromJSON(jsonStr string) (*oauth2.Token, error) {
-	var token oauth2.Token
-	if err := json.Unmarshal([]byte(jsonStr), &token); err != nil {
-		return nil, err
-	}
-	return &token, nil
+	return usr, nil
 }
