@@ -28,11 +28,11 @@ func NewGithubRepository(clientID, clientSecret string, scopes []string) (*Githu
 		Endpoint:     ghoauth.Endpoint,
 	}
 
-	repo := &GithubRepository{
+	rp := &GithubRepository{
 		oauthConfig: oauth2client,
 	}
 
-	return repo, nil
+	return rp, nil
 }
 
 var README = domain.File{
@@ -48,7 +48,7 @@ func (repo GithubRepository) GetOauthURL() (string, string) {
 	return url, oauthStateString
 }
 
-func (repo GithubRepository) GetRepository(code, givenState, incomingStates string) (*domain.User, error) {
+func (repo GithubRepository) GetToken(code, givenState, incomingStates string) (*domain.User, error) {
 
 	token, err := repo.oauthConfig.Exchange(oauth2.NoContext, code)
 	if err != nil {
@@ -173,7 +173,7 @@ func (repo GithubRepository) CreateRepo(username, reponame, org string, private 
 	return r, nil
 }
 
-func (repo GithubRepository) GetKey(username, id int) (*domain.Key, error) {
+func (repo GithubRepository) GetKey(username string, id int) (*domain.Key, error) {
 	ghkey, _, err := repo.client.Users.GetKey(id)
 	if err != nil {
 		return nil, err
