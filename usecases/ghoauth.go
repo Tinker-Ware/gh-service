@@ -1,13 +1,8 @@
 package usecases
 
-import (
-	"github.com/gh-service/domain"
-
-	"golang.org/x/oauth2"
-)
+import "github.com/gh-service/domain"
 
 type GHInteractor struct {
-	OauthConfig      *oauth2.Config
 	GithubRepository GithubRepository
 }
 
@@ -45,7 +40,7 @@ func (interactor GHInteractor) GHCallback(code, state, incomingState string) (*d
 	return usr, nil
 }
 
-func (interactor GHInteractor) ShowUser(username, token string) (*domain.User, error) {
+func (interactor GHInteractor) ShowUser(username string) (*domain.User, error) {
 
 	usr, err := interactor.GithubRepository.GetUser(username)
 	if err != nil {

@@ -11,7 +11,7 @@ func (interactor GHInteractor) ShowRepos(username string) ([]domain.Repository, 
 	return repos, nil
 }
 
-func (interactor GHInteractor) CreateRepo(username, token, reponame, org string, private bool) (*domain.Repository, error) {
+func (interactor GHInteractor) CreateRepo(username, reponame, org string, private bool) (*domain.Repository, error) {
 	r, err := interactor.GithubRepository.CreateRepo(username, reponame, org, private)
 	if err != nil {
 		return nil, err
@@ -19,7 +19,7 @@ func (interactor GHInteractor) CreateRepo(username, token, reponame, org string,
 	return r, nil
 }
 
-func (interactor GHInteractor) ShowRepo(username, token, repo string) (*domain.Repository, error) {
+func (interactor GHInteractor) ShowRepo(username, repo string) (*domain.Repository, error) {
 
 	r, err := interactor.GithubRepository.GetRepo(username, repo)
 	if err != nil {

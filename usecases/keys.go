@@ -13,7 +13,7 @@ func (interactor GHInteractor) ShowKeys(username string) ([]domain.Key, error) {
 
 }
 
-func (interactor GHInteractor) CreateKey(username, token string, key *domain.Key) error {
+func (interactor GHInteractor) CreateKey(username string, key *domain.Key) error {
 
 	err := interactor.GithubRepository.CreateKey(username, key)
 	if err != nil {
@@ -22,7 +22,7 @@ func (interactor GHInteractor) CreateKey(username, token string, key *domain.Key
 	return nil
 }
 
-func (interactor GHInteractor) ShowKey(username, token string, id int) (*domain.Key, error) {
+func (interactor GHInteractor) ShowKey(username string, id int) (*domain.Key, error) {
 
 	key, err := interactor.GithubRepository.GetKey(username, id)
 	if err != nil {
