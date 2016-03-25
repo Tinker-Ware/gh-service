@@ -1,4 +1,4 @@
-package usecases_test
+package interfaces_test
 
 import (
 	"bytes"
@@ -6,73 +6,81 @@ import (
 	"fmt"
 	"net/http"
 
-	"golang.org/x/oauth2"
-
-	"github.com/google/go-github/github"
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
+	"net/url"
 
 	"github.com/gh-service/domain"
-	"github.com/gh-service/interfaces"
-	. "github.com/gh-service/usecases"
+	. "github.com/gh-service/interfaces"
+	"github.com/google/go-github/github"
+	"golang.org/x/oauth2"
+
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Usecases", func() {
-
+var _ = Describe("GithubRepo", func() {
 	var id = 0
+	var keyID = 0
 	var token = ""
 	var username = "iasstest"
 	var userToken = "123tamarindo"
 	var clientID = "0d14937151de189d07a9"
 	var clientSecret = "f37ca3601f3822ac37a02f51efe60843e528d4a9"
 	var scopes = []string{"user:email", "delete_repo", "repo", "admin:public_key"}
-	var keyID = 0
-	var interactor = GHInteractor{}
+	var repo = &GithubRepository{}
 
 	BeforeSuite(func() {
 		id, token, _ = getToken(clientID, clientSecret, username, userToken)
-		ghrepo, err := interfaces.NewGithubRepository(clientID, clientSecret, scopes)
-		if err != nil {
-			panic(err.Error())
-		}
-
-		ghrepo.SetToken(token)
-		interactor = GHInteractor{
-			GithubRepository: ghrepo,
-		}
-
+		repo, _ = NewGithubRepository(clientID, clientID, scopes)
+		repo.SetToken(token)
 	})
 
-	Describe("Test interactor functionality", func() {
+	reponame := "test"
 
-		reponame := "test"
-
-		Context("Test repo functionality", func() {
-
-			It("Should create a repo with the test account", func() {
-				repo, err := interactor.CreateRepo(username, token, reponame, "", false)
-
-				Ω(err).ShouldNot(HaveOccurred())
-				Ω(*repo.FullName).Should(ContainSubstring(reponame))
-			})
-
-			It("Should retrieve a list of repositories", func() {
-				repos, err := interactor.ShowRepos(username)
-				Ω(err).ShouldNot(HaveOccurred())
-
-				Ω(repos).Should(HaveLen(1))
+	Describe("Test Oauth functionality", func() {
+		Context("Get a oauth URL", func() {
+			It("Should return a correctly formed url", func() {
+				oauthURL, state := repo.GetOauthURL()
+				Ω(oauthURL).Should(ContainSubstring(clientID))
+				Ω(oauthURL).Should(ContainSubstring(state))
+				Ω(oauthURL).Should(ContainSubstring(url.QueryEscape(scopes[0])))
+				Ω(oauthURL).Should(ContainSubstring(url.QueryEscape(scopes[1])))
+				Ω(oauthURL).Should(ContainSubstring(url.QueryEscape(scopes[2])))
+				Ω(oauthURL).Should(ContainSubstring(url.QueryEscape(scopes[3])))
 			})
 
 		})
+	})
 
-		Context("Test public key functionality", func() {
+	Describe("Test repo funcionality", func() {
+		Context("Create a new repo", func() {
+
+			It("Should create a new repo", func() {
+				rp, err := repo.CreateRepo(username, reponame, "", false)
+				Ω(err).ShouldNot(HaveOccurred())
+				Ω(*rp.FullName).Should(ContainSubstring(reponame))
+			})
+
+			It("Should retrieve a list of repositories", func() {
+				repos, err := repo.GetAllRepos(username)
+				Ω(err).ShouldNot(HaveOccurred())
+
+				Ω(repos).ShouldNot(HaveLen(0))
+			})
+
+		})
+	})
+
+	Describe("Test key functionality", func() {
+		Context("With a test key", func() {
+			strKey := "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCz98siv2mHLiyk4MT1c6kA5BKlrLejRCpUOSHiCDcCxYN0aPbWfDRW7qMMyUrrCIcRXyd+ZPKn3O0FyDI/HKOFn3qn7PFawnG/1u6cg1H9TvPYmohQuNPt9gArmxdkecl9tFXamrSo3K3H2Uyb3RA9Q0c9NW4XDr/k1tSijSdZkhHf0tGgAuF28YGiXbri38oZsDPVkR24UajLQPfdHTFUAvmXjde7WKTU2I6zvOY/vEoaVSG5Tfnk+LsDp2L4wbl5SkMzZ6GjaQ/kn+6HBuznnSX3g0AEp9y9JiWd+YRAm46dKeRkzDm65dNP1FO/4Ovp2Xm599GB47su47DJ/2qV vagrant@web"
+
 			key := domain.Key{
 				Title: github.String("TestKey"),
-				Key:   github.String("ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCz98siv2mHLiyk4MT1c6kA5BKlrLejRCpUOSHiCDcCxYN0aPbWfDRW7qMMyUrrCIcRXyd+ZPKn3O0FyDI/HKOFn3qn7PFawnG/1u6cg1H9TvPYmohQuNPt9gArmxdkecl9tFXamrSo3K3H2Uyb3RA9Q0c9NW4XDr/k1tSijSdZkhHf0tGgAuF28YGiXbri38oZsDPVkR24UajLQPfdHTFUAvmXjde7WKTU2I6zvOY/vEoaVSG5Tfnk+LsDp2L4wbl5SkMzZ6GjaQ/kn+6HBuznnSX3g0AEp9y9JiWd+YRAm46dKeRkzDm65dNP1FO/4Ovp2Xm599GB47su47DJ/2qV vagrant@web"),
+				Key:   github.String(strKey),
 			}
 
 			It("Should Create a Key", func() {
-				err := interactor.CreateKey(username, token, &key)
+				err := repo.CreateKey(username, &key)
 				Ω(err).ShouldNot(HaveOccurred())
 
 				Ω(*key.ID).ShouldNot(BeZero())
@@ -80,7 +88,7 @@ var _ = Describe("Usecases", func() {
 			})
 
 			It("Should list all keys", func() {
-				keys, err := interactor.ShowKeys(username)
+				keys, err := repo.ShowKeys(username)
 
 				Ω(err).ShouldNot(HaveOccurred())
 
@@ -88,63 +96,39 @@ var _ = Describe("Usecases", func() {
 			})
 
 		})
+	})
 
-		Context("Test file functionality", func() {
+	Context("Add multiple files", func() {
+		reponame := "multipleFiles"
+		files := []domain.File{{
+			Path:    "Bye.md",
+			Content: []byte("# Bye"),
+		},
+			{
+				Path:    "folder/Hello.md",
+				Content: []byte("# Hello"),
+			}}
+		author := domain.Author{
+			Author:  "iasstest",
+			Message: "Hello",
+			Branch:  "master",
+			Email:   "infraestructuretest@gmail.com",
+		}
+		It("Should create files in the repo", func() {
+			_, err := repo.CreateRepo(username, reponame, "", false)
+			Ω(err).ShouldNot(HaveOccurred())
 
-			dt := "# Hello"
-			file := domain.File{
-				Path:    "test.md",
-				Content: []byte(dt),
-			}
-
-			author := domain.Author{
-				Author:  "iasstest",
-				Message: "Add file",
-				Branch:  "master",
-				Email:   "infraestructuretest@gmail.com",
-			}
-
-			It("Should create a file in the repo", func() {
-				err := interactor.CreateFile(file, author, username, reponame)
-				Ω(err).ShouldNot(HaveOccurred())
-
-			})
-
-		})
-
-		Context("Add multiple files", func() {
-			repo := "multipleFiles"
-			files := []domain.File{{
-				Path:    "Bye.md",
-				Content: []byte("# Bye"),
-			},
-				{
-					Path:    "folder/Hello.md",
-					Content: []byte("# Hello"),
-				}}
-			author := domain.Author{
-				Author:  "iasstest",
-				Message: "Hello",
-				Branch:  "master",
-				Email:   "infraestructuretest@gmail.com",
-			}
-			It("Should create files in the repo", func() {
-				_, err := interactor.CreateRepo(username, token, repo, "", false)
-				Ω(err).ShouldNot(HaveOccurred())
-
-				err = interactor.AddFiles(files, author, username, repo)
-				Ω(err).ShouldNot(HaveOccurred())
-
-			})
+			err = repo.AddFiles(files, author, username, reponame)
+			Ω(err).ShouldNot(HaveOccurred())
 
 		})
 
 	})
 
 	AfterSuite(func() {
+		deleteKey(keyID, userToken)
 		deleteRepo("test", username, token)
 		deleteRepo("multipleFiles", username, token)
-		deleteKey(keyID, userToken)
 		deleteToken(id, username, userToken)
 	})
 
