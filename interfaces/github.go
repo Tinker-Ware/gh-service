@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gh-service/domain"
+	"github.com/Tinker-Ware/gh-service/domain"
 	"github.com/google/go-github/github"
 	"golang.org/x/oauth2"
 

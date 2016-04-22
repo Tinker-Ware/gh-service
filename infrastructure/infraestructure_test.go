@@ -4,7 +4,7 @@ import (
 	"io/ioutil"
 	"os"
 
-	. "github.com/gh-service/infrastructure"
+	. "github.com/Tinker-Ware/gh-service/infrastructure"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

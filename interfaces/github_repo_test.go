@@ -8,8 +8,8 @@ import (
 
 	"net/url"
 
-	"github.com/gh-service/domain"
-	. "github.com/gh-service/interfaces"
+	"github.com/Tinker-Ware/gh-service/domain"
+	. "github.com/Tinker-Ware/gh-service/interfaces"
 	"github.com/google/go-github/github"
 	"golang.org/x/oauth2"
 

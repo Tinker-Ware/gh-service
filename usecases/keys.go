@@ -1,6 +1,6 @@
 package usecases
 
-import "github.com/gh-service/domain"
+import "github.com/Tinker-Ware/gh-service/domain"
 
 func (interactor GHInteractor) ShowKeys(username string) ([]domain.Key, error) {
 

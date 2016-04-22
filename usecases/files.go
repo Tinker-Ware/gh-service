@@ -1,6 +1,6 @@
 package usecases
 
-import "github.com/gh-service/domain"
+import "github.com/Tinker-Ware/gh-service/domain"
 
 func (interactor GHInteractor) CreateFile(file domain.File, author domain.Author, username, repo string) error {
 

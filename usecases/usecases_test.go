@@ -12,9 +12,9 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"github.com/gh-service/domain"
-	"github.com/gh-service/interfaces"
-	. "github.com/gh-service/usecases"
+	"github.com/Tinker-Ware/gh-service/domain"
+	"github.com/Tinker-Ware/gh-service/interfaces"
+	. "github.com/Tinker-Ware/gh-service/usecases"
 )
 
 var _ = Describe("Usecases", func() {

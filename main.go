@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/Tinker-Ware/gh-service/infrastructure"
+	"github.com/Tinker-Ware/gh-service/interfaces"
+	"github.com/Tinker-Ware/gh-service/usecases"
 	"github.com/codegangsta/negroni"
-	"github.com/gh-service/infrastructure"
-	"github.com/gh-service/interfaces"
-	"github.com/gh-service/usecases"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
 )
