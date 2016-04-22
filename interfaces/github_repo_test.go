@@ -112,7 +112,7 @@ var _ = Describe("GithubRepo", func() {
 			Author:  "iasstest",
 			Message: "Hello",
 			Branch:  "master",
-			Email:   "infraestructuretest@gmail.com",
+			Email:   "infrastructuretest@gmail.com",
 		}
 		It("Should create files in the repo", func() {
 			_, err := repo.CreateRepo(username, reponame, "", false)

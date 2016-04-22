@@ -101,7 +101,7 @@ var _ = Describe("Usecases", func() {
 				Author:  "iasstest",
 				Message: "Add file",
 				Branch:  "master",
-				Email:   "infraestructuretest@gmail.com",
+				Email:   "infrastructuretest@gmail.com",
 			}
 
 			It("Should create a file in the repo", func() {
@@ -126,7 +126,7 @@ var _ = Describe("Usecases", func() {
 				Author:  "iasstest",
 				Message: "Hello",
 				Branch:  "master",
-				Email:   "infraestructuretest@gmail.com",
+				Email:   "infrastructuretest@gmail.com",
 			}
 			It("Should create files in the repo", func() {
 				_, err := interactor.CreateRepo(username, token, repo, "", false)

@@ -1,4 +1,4 @@
-package infraestructure_test
+package infrastructure_test
 
 import (
 	. "github.com/onsi/ginkgo"
@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-func TestInfraestructure(t *testing.T) {
+func Testinfrastructure(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Infraestructure Suite")
+	RunSpecs(t, "infrastructure Suite")
 }
