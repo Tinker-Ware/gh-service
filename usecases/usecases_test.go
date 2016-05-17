@@ -60,7 +60,7 @@ var _ = Describe("Usecases", func() {
 				repos, err := interactor.ShowRepos(username)
 				Ω(err).ShouldNot(HaveOccurred())
 
-				Ω(repos).Should(HaveLen(1))
+				Ω(len(repos)).Should(BeNumerically(">", 0))
 			})
 
 		})
