@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/Tinker-Ware/gh-service/infrastructure"
+	"github.com/Tinker-Ware/gh-service/interfaces"
+	"github.com/Tinker-Ware/gh-service/usecases"
 	"github.com/codegangsta/negroni"
-	"github.com/gh-service/infraestructure"
-	"github.com/gh-service/interfaces"
-	"github.com/gh-service/usecases"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
 )
@@ -24,7 +24,7 @@ func main() {
 
 	flag.Parse()
 
-	config, err := infraestructure.GetConfiguration(*confFilePath)
+	config, err := infrastructure.GetConfiguration(*confFilePath)
 	if err != nil {
 		fmt.Println(err.Error())
 		panic("Cannot parse configuration")

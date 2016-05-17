@@ -12,9 +12,9 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"github.com/gh-service/domain"
-	"github.com/gh-service/interfaces"
-	. "github.com/gh-service/usecases"
+	"github.com/Tinker-Ware/gh-service/domain"
+	"github.com/Tinker-Ware/gh-service/interfaces"
+	. "github.com/Tinker-Ware/gh-service/usecases"
 )
 
 var _ = Describe("Usecases", func() {
@@ -50,7 +50,7 @@ var _ = Describe("Usecases", func() {
 		Context("Test repo functionality", func() {
 
 			It("Should create a repo with the test account", func() {
-				repo, err := interactor.CreateRepo(username, token, reponame, "", false)
+				repo, err := interactor.CreateRepo(username, reponame, "", false)
 
 				Ω(err).ShouldNot(HaveOccurred())
 				Ω(*repo.FullName).Should(ContainSubstring(reponame))
@@ -60,7 +60,7 @@ var _ = Describe("Usecases", func() {
 				repos, err := interactor.ShowRepos(username)
 				Ω(err).ShouldNot(HaveOccurred())
 
-				Ω(repos).Should(HaveLen(1))
+				Ω(len(repos)).Should(BeNumerically(">", 0))
 			})
 
 		})
@@ -72,7 +72,7 @@ var _ = Describe("Usecases", func() {
 			}
 
 			It("Should Create a Key", func() {
-				err := interactor.CreateKey(username, token, &key)
+				err := interactor.CreateKey(username, &key)
 				Ω(err).ShouldNot(HaveOccurred())
 
 				Ω(*key.ID).ShouldNot(BeZero())
@@ -101,7 +101,7 @@ var _ = Describe("Usecases", func() {
 				Author:  "iasstest",
 				Message: "Add file",
 				Branch:  "master",
-				Email:   "infraestructuretest@gmail.com",
+				Email:   "infrastructuretest@gmail.com",
 			}
 
 			It("Should create a file in the repo", func() {
@@ -126,10 +126,10 @@ var _ = Describe("Usecases", func() {
 				Author:  "iasstest",
 				Message: "Hello",
 				Branch:  "master",
-				Email:   "infraestructuretest@gmail.com",
+				Email:   "infrastructuretest@gmail.com",
 			}
 			It("Should create files in the repo", func() {
-				_, err := interactor.CreateRepo(username, token, repo, "", false)
+				_, err := interactor.CreateRepo(username, repo, "", false)
 				Ω(err).ShouldNot(HaveOccurred())
 
 				err = interactor.AddFiles(files, author, username, repo)

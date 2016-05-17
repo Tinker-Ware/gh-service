@@ -1,1 +1,1 @@
-package infraestructure
+package infrastructure

@@ -8,8 +8,8 @@ import (
 
 	"net/url"
 
-	"github.com/gh-service/domain"
-	. "github.com/gh-service/interfaces"
+	"github.com/Tinker-Ware/gh-service/domain"
+	. "github.com/Tinker-Ware/gh-service/interfaces"
 	"github.com/google/go-github/github"
 	"golang.org/x/oauth2"
 
@@ -112,7 +112,7 @@ var _ = Describe("GithubRepo", func() {
 			Author:  "iasstest",
 			Message: "Hello",
 			Branch:  "master",
-			Email:   "infraestructuretest@gmail.com",
+			Email:   "infrastructuretest@gmail.com",
 		}
 		It("Should create files in the repo", func() {
 			_, err := repo.CreateRepo(username, reponame, "", false)

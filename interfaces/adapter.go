@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/gh-service/domain"
+	"github.com/Tinker-Ware/gh-service/domain"
 )
 
 type Adapter func(http.Handler) http.Handler

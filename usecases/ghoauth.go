@@ -1,6 +1,6 @@
 package usecases
 
-import "github.com/gh-service/domain"
+import "github.com/Tinker-Ware/gh-service/domain"
 
 type GHInteractor struct {
 	GithubRepository GithubRepository
