@@ -1,10 +1,11 @@
 {
-	"ImportPath": "github.com/gh-service",
-	"GoVersion": "go1.4.2",
+	"ImportPath": "github.com/Tinker-Ware/gh-service",
+	"GoVersion": "go1.6",
+	"GodepVersion": "v73",
 	"Deps": [
 		{
 			"ImportPath": "github.com/codegangsta/negroni",
-			"Comment": "v0.1-70-gc7477ad",
+			"Comment": "v0.1.0-70-gc7477ad",
 			"Rev": "c7477ad8e330bef55bf1ebe300cf8aa67c492d1b"
 		},
 		{
@@ -37,6 +38,14 @@
 		},
 		{
 			"ImportPath": "golang.org/x/oauth2",
+			"Rev": "8914e5017ca260f2a3a1575b1e6868874050d95e"
+		},
+		{
+			"ImportPath": "golang.org/x/oauth2/github",
+			"Rev": "8914e5017ca260f2a3a1575b1e6868874050d95e"
+		},
+		{
+			"ImportPath": "golang.org/x/oauth2/internal",
 			"Rev": "8914e5017ca260f2a3a1575b1e6868874050d95e"
 		},
 		{
