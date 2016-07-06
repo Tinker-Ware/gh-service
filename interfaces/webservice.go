@@ -37,8 +37,12 @@ type multipleFilesRequest struct {
 	Files  []domain.File `json:"files"`
 }
 
-type repoResponse struct {
+type repositoryResponse struct {
 	Repository *domain.Repository `json:"repository"`
+}
+
+type repositoriesResponse struct {
+	Repositories []domain.Repository `json:"repositories"`
 }
 
 type GHInteractor interface {
@@ -142,7 +146,11 @@ func (handler WebServiceHandler) ShowRepos(res http.ResponseWriter, req *http.Re
 		return
 	}
 
-	reposB, _ := json.Marshal(repos)
+	reposR := repositoriesResponse{
+		Repositories: repos,
+	}
+
+	reposB, _ := json.Marshal(reposR)
 
 	res.Header().Set("Content-Type", "application/json; charset=utf-8")
 	res.WriteHeader(http.StatusOK)
@@ -189,7 +197,7 @@ func (handler WebServiceHandler) ShowRepo(res http.ResponseWriter, req *http.Req
 
 	}
 
-	repoR := repoResponse{
+	repoR := repositoryResponse{
 		Repository: repo,
 	}
 
