@@ -8,7 +8,6 @@ import (
 
 	"net/url"
 
-	"github.com/Tinker-Ware/gh-service/domain"
 	. "github.com/Tinker-Ware/gh-service/interfaces"
 	"github.com/google/go-github/github"
 	"golang.org/x/oauth2"
@@ -19,7 +18,6 @@ import (
 
 var _ = Describe("GithubRepo", func() {
 	var id = 0
-	var keyID = 0
 	var token = ""
 	var username = "iasstest"
 	var userToken = "123tamarindo"
@@ -34,7 +32,7 @@ var _ = Describe("GithubRepo", func() {
 		repo.SetToken(token)
 	})
 
-	reponame := "test"
+	// reponame := "test"
 
 	Describe("Test Oauth functionality", func() {
 		Context("Get a oauth URL", func() {
@@ -55,9 +53,9 @@ var _ = Describe("GithubRepo", func() {
 		Context("Create a new repo", func() {
 
 			It("Should create a new repo", func() {
-				rp, err := repo.CreateRepo(username, reponame, "", false)
+				rp, err := repo.CreateRepo(username, "test", "", false)
 				Ω(err).ShouldNot(HaveOccurred())
-				Ω(*rp.FullName).Should(ContainSubstring(reponame))
+				Ω(*rp.FullName).Should(ContainSubstring("test"))
 			})
 
 			It("Should retrieve a list of repositories", func() {
@@ -70,65 +68,8 @@ var _ = Describe("GithubRepo", func() {
 		})
 	})
 
-	Describe("Test key functionality", func() {
-		Context("With a test key", func() {
-			strKey := "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCz98siv2mHLiyk4MT1c6kA5BKlrLejRCpUOSHiCDcCxYN0aPbWfDRW7qMMyUrrCIcRXyd+ZPKn3O0FyDI/HKOFn3qn7PFawnG/1u6cg1H9TvPYmohQuNPt9gArmxdkecl9tFXamrSo3K3H2Uyb3RA9Q0c9NW4XDr/k1tSijSdZkhHf0tGgAuF28YGiXbri38oZsDPVkR24UajLQPfdHTFUAvmXjde7WKTU2I6zvOY/vEoaVSG5Tfnk+LsDp2L4wbl5SkMzZ6GjaQ/kn+6HBuznnSX3g0AEp9y9JiWd+YRAm46dKeRkzDm65dNP1FO/4Ovp2Xm599GB47su47DJ/2qV vagrant@web"
-
-			key := domain.Key{
-				Title: github.String("TestKey"),
-				Key:   github.String(strKey),
-			}
-
-			It("Should Create a Key", func() {
-				err := repo.CreateKey(username, &key)
-				Ω(err).ShouldNot(HaveOccurred())
-
-				Ω(*key.ID).ShouldNot(BeZero())
-				keyID = *key.ID
-			})
-
-			It("Should list all keys", func() {
-				keys, err := repo.ShowKeys(username)
-
-				Ω(err).ShouldNot(HaveOccurred())
-
-				Ω(keys).Should(HaveLen(1))
-			})
-
-		})
-	})
-
-	Context("Add multiple files", func() {
-		reponame := "multipleFiles"
-		files := []domain.File{{
-			Path:    "Bye.md",
-			Content: []byte("# Bye"),
-		},
-			{
-				Path:    "folder/Hello.md",
-				Content: []byte("# Hello"),
-			}}
-		author := domain.Author{
-			Author:  "iasstest",
-			Message: "Hello",
-			Branch:  "master",
-			Email:   "infrastructuretest@gmail.com",
-		}
-		It("Should create files in the repo", func() {
-			_, err := repo.CreateRepo(username, reponame, "", false)
-			Ω(err).ShouldNot(HaveOccurred())
-
-			err = repo.AddFiles(files, author, username, reponame)
-			Ω(err).ShouldNot(HaveOccurred())
-
-		})
-
-	})
-
 	AfterSuite(func() {
-		deleteKey(keyID, userToken)
 		deleteRepo("test", username, token)
-		deleteRepo("multipleFiles", username, token)
 		deleteToken(id, username, userToken)
 	})
 
