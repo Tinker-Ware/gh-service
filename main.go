@@ -50,8 +50,8 @@ func main() {
 
 	versionSubrouter := r.PathPrefix(apiVersion).Subrouter()
 
-	subrouter := versionSubrouter.PathPrefix("/github").Subrouter()
-	subrouter.HandleFunc("/login", handler.Login)
+	subrouter := versionSubrouter.PathPrefix("/api/v1/repository/github/").Subrouter()
+	subrouter.HandleFunc("/gh_callback", handler.Login)
 	subrouter.HandleFunc("/github_oauth_cb", handler.Callback)
 	subrouter.Handle("/user/{username}", interfaces.Adapt(http.HandlerFunc(handler.ShowUser), interfaces.Notify(), interfaces.SetToken(ghrepo))).Methods("GET")
 	subrouter.Handle("/user/{username}/repos", interfaces.Adapt(http.HandlerFunc(handler.ShowRepos), interfaces.Notify(), interfaces.SetToken(ghrepo))).Methods("GET")
