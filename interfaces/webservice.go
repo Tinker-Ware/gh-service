@@ -37,6 +37,10 @@ type multipleFilesRequest struct {
 	Files  []domain.File `json:"files"`
 }
 
+type repoResponse struct {
+	Repository *domain.Repository `json:"repository"`
+}
+
 type GHInteractor interface {
 	GHCallback(code, state, incomingState string) (*domain.User, error)
 	GHLogin() (string, string)
@@ -185,7 +189,11 @@ func (handler WebServiceHandler) ShowRepo(res http.ResponseWriter, req *http.Req
 
 	}
 
-	repoB, _ := json.Marshal(repo)
+	repoR := repoResponse{
+		Repository: repo,
+	}
+
+	repoB, _ := json.Marshal(repoR)
 
 	res.Header().Set("Content-Type", "application/json; charset=utf-8")
 	res.WriteHeader(http.StatusOK)
