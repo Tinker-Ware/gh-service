@@ -14,11 +14,14 @@ import (
 	ghoauth "golang.org/x/oauth2/github"
 )
 
+// GithubRepository receives a github client and performs the necessary operations
+// within an user account
 type GithubRepository struct {
 	client      *github.Client
 	oauthConfig *oauth2.Config
 }
 
+// NewGithubRepository initializes the GithubRepository
 func NewGithubRepository(clientID, clientSecret string, scopes []string) (*GithubRepository, error) {
 
 	oauth2client := &oauth2.Config{
@@ -35,6 +38,7 @@ func NewGithubRepository(clientID, clientSecret string, scopes []string) (*Githu
 	return rp, nil
 }
 
+// README defines a readme to be written in a repository
 var README = domain.File{
 	Path:    "README.md",
 	Content: []byte("# This is a README"),
@@ -42,12 +46,14 @@ var README = domain.File{
 
 var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
+// GetOauthURL returns the OATH URL based on the configuration
 func (repo GithubRepository) GetOauthURL() (string, string) {
 	oauthStateString := randSeq(10)
 	url := repo.oauthConfig.AuthCodeURL(oauthStateString, oauth2.AccessTypeOnline)
 	return url, oauthStateString
 }
 
+// GetToken returns a token from Github with the code received from the GET request
 func (repo GithubRepository) GetToken(code, givenState, incomingStates string) (*domain.User, error) {
 
 	token, err := repo.oauthConfig.Exchange(oauth2.NoContext, code)
@@ -72,6 +78,7 @@ func (repo GithubRepository) GetToken(code, givenState, incomingStates string) (
 	return &usr, nil
 }
 
+// GetUser retrieves the github user information
 func (repo *GithubRepository) GetUser(username string) (*domain.User, error) {
 	user, _, err := repo.client.Users.Get(username)
 
@@ -88,6 +95,7 @@ func (repo *GithubRepository) GetUser(username string) (*domain.User, error) {
 
 }
 
+// SetToken sets the token for the client
 func (repo *GithubRepository) SetToken(token string) {
 
 	ts := oauth2.StaticTokenSource(
@@ -100,6 +108,7 @@ func (repo *GithubRepository) SetToken(token string) {
 
 }
 
+// GetAllRepos returns all the repos from an user account
 func (repo GithubRepository) GetAllRepos(username string) ([]domain.Repository, error) {
 
 	// list all repositories for the authenticated user
@@ -129,6 +138,7 @@ func (repo GithubRepository) GetAllRepos(username string) ([]domain.Repository, 
 	return repos, nil
 }
 
+// GetRepo gets the information from a single repo
 func (repo GithubRepository) GetRepo(username, reponame string) (*domain.Repository, error) {
 
 	rp, _, err := repo.client.Repositories.Get(username, reponame)
@@ -149,6 +159,7 @@ func (repo GithubRepository) GetRepo(username, reponame string) (*domain.Reposit
 	return r, nil
 }
 
+// CreateRepo creates a repository in the github user account
 func (repo GithubRepository) CreateRepo(username, reponame, org string, private bool) (*domain.Repository, error) {
 	rp := &github.Repository{
 		Name:    github.String(reponame),
@@ -173,6 +184,7 @@ func (repo GithubRepository) CreateRepo(username, reponame, org string, private 
 	return r, nil
 }
 
+// GetKey returns a Key from the user github account
 func (repo GithubRepository) GetKey(username string, id int) (*domain.Key, error) {
 	ghkey, _, err := repo.client.Users.GetKey(id)
 	if err != nil {
@@ -189,6 +201,7 @@ func (repo GithubRepository) GetKey(username string, id int) (*domain.Key, error
 	return key, nil
 }
 
+// ShowKeys returns all the keys in a user github account
 func (repo GithubRepository) ShowKeys(username string) ([]domain.Key, error) {
 	ghKeys, _, err := repo.client.Users.ListKeys(username, nil)
 	if err != nil {
@@ -212,6 +225,7 @@ func (repo GithubRepository) ShowKeys(username string) ([]domain.Key, error) {
 
 }
 
+// CreateKey creates a key in the github repository
 func (repo GithubRepository) CreateKey(username string, key *domain.Key) error {
 
 	k := github.Key{
@@ -231,6 +245,7 @@ func (repo GithubRepository) CreateKey(username string, key *domain.Key) error {
 
 }
 
+// CreateFile creates file inside an user repository
 func (repo GithubRepository) CreateFile(file domain.File, author domain.Author, username, repoName string) error {
 
 	opt := &github.RepositoryContentFileOptions{
@@ -250,6 +265,7 @@ func (repo GithubRepository) CreateFile(file domain.File, author domain.Author, 
 	return nil
 }
 
+// AddFiles inserts multiple files inside a github repository
 func (repo GithubRepository) AddFiles(files []domain.File, author domain.Author, username, reponame string) error {
 	tree := []github.TreeEntry{}
 	emptyRepo := "409 Git Repository is empty"
