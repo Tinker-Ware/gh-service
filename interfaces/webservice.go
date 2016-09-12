@@ -45,6 +45,7 @@ type repositoriesResponse struct {
 	Repositories []domain.Repository `json:"repositories"`
 }
 
+// GHInteractor defines all the functions the Github Interactor should have
 type GHInteractor interface {
 	GHCallback(code, state, incomingState string) (*domain.User, error)
 	GHLogin() (string, string)
@@ -59,11 +60,13 @@ type GHInteractor interface {
 	AddFiles(files []domain.File, author domain.Author, username, repo string) error
 }
 
+// WebServiceHandler has all the necessary fields to run a web-based interface
 type WebServiceHandler struct {
 	GHInteractor GHInteractor
 	Sessions     *sessions.CookieStore
 }
 
+// Login is a helper method to test the Github oauth login
 func (handler WebServiceHandler) Login(res http.ResponseWriter, req *http.Request) {
 
 	url, state := handler.GHInteractor.GHLogin()
@@ -74,6 +77,7 @@ func (handler WebServiceHandler) Login(res http.ResponseWriter, req *http.Reques
 
 }
 
+// Callback manages the Github OAUTH callback
 func (handler WebServiceHandler) Callback(res http.ResponseWriter, req *http.Request) {
 
 	incomingState := req.FormValue("state")
@@ -93,12 +97,14 @@ func (handler WebServiceHandler) Callback(res http.ResponseWriter, req *http.Req
 
 }
 
+// Root is a function for the index of the microservice
 func (handler WebServiceHandler) Root(res http.ResponseWriter, req *http.Request) {
 	res.Header().Set("Content-Type", "text/html; charset=utf-8")
 	res.WriteHeader(http.StatusOK)
 	res.Write([]byte(htmlIndex))
 }
 
+// GetCurrentUser gets the current user in the microservice
 func (handler WebServiceHandler) GetCurrentUser(res http.ResponseWriter, req *http.Request) {
 	session, err := handler.Sessions.Get(req, "user")
 	if err != nil {
@@ -116,6 +122,7 @@ func (handler WebServiceHandler) GetCurrentUser(res http.ResponseWriter, req *ht
 
 }
 
+// ShowUser returns the current logged user
 func (handler WebServiceHandler) ShowUser(res http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 	username := vars["username"]
@@ -135,6 +142,7 @@ func (handler WebServiceHandler) ShowUser(res http.ResponseWriter, req *http.Req
 	res.Write([]byte(userB))
 }
 
+// ShowRepos returns a JSON with all the repositories within an user account
 func (handler WebServiceHandler) ShowRepos(res http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 	username := vars["username"]
@@ -157,6 +165,7 @@ func (handler WebServiceHandler) ShowRepos(res http.ResponseWriter, req *http.Re
 	res.Write([]byte(reposB))
 }
 
+// CreateRepo creates a repository in the user account and returns a JSON response
 func (handler WebServiceHandler) CreateRepo(res http.ResponseWriter, req *http.Request) {
 	defer req.Body.Close()
 
@@ -184,6 +193,7 @@ func (handler WebServiceHandler) CreateRepo(res http.ResponseWriter, req *http.R
 
 }
 
+// ShowRepo returns a JSON response of a single repository
 func (handler WebServiceHandler) ShowRepo(res http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 	username := vars["username"]
@@ -209,6 +219,7 @@ func (handler WebServiceHandler) ShowRepo(res http.ResponseWriter, req *http.Req
 
 }
 
+// ShowKeys returns all the keys within github in a JSON response
 func (handler WebServiceHandler) ShowKeys(res http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 	username := vars["username"]
@@ -229,6 +240,7 @@ func (handler WebServiceHandler) ShowKeys(res http.ResponseWriter, req *http.Req
 
 }
 
+// CreateKey creates a key in the user repository
 func (handler WebServiceHandler) CreateKey(res http.ResponseWriter, req *http.Request) {
 	defer req.Body.Close()
 
@@ -258,6 +270,7 @@ func (handler WebServiceHandler) CreateKey(res http.ResponseWriter, req *http.Re
 	res.Write([]byte(keyB))
 }
 
+// ShowKey shows a single key whithin the user account on github
 func (handler WebServiceHandler) ShowKey(res http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 	username := vars["username"]
@@ -285,6 +298,7 @@ func (handler WebServiceHandler) ShowKey(res http.ResponseWriter, req *http.Requ
 
 }
 
+// AddFileToRepository adds a single file within an user repository
 func (handler WebServiceHandler) AddFileToRepository(res http.ResponseWriter, req *http.Request) {
 	vars := mux.Vars(req)
 	username := vars["username"]
@@ -310,6 +324,7 @@ func (handler WebServiceHandler) AddFileToRepository(res http.ResponseWriter, re
 
 }
 
+// AddMultipleFilesToRepository add multiple files into a repository
 func (handler WebServiceHandler) AddMultipleFilesToRepository(res http.ResponseWriter, req *http.Request) {
 	defer req.Body.Close()
 

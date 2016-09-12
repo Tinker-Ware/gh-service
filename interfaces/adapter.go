@@ -8,11 +8,13 @@ import (
 	"github.com/Tinker-Ware/gh-service/domain"
 )
 
+// Adapter is the signature of an HTTPHandler for middlewares
 type Adapter func(http.Handler) http.Handler
 type repository interface {
 	SetToken(token string)
 }
 
+// Notify is a middleware to measure the time that a request takes
 func Notify() Adapter {
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -23,6 +25,7 @@ func Notify() Adapter {
 	}
 }
 
+// Adapt takes several Adapters and calls them in order
 func Adapt(h http.Handler, adapters ...Adapter) http.Handler {
 	for _, adapter := range adapters {
 		h = adapter(h)
@@ -30,6 +33,7 @@ func Adapt(h http.Handler, adapters ...Adapter) http.Handler {
 	return h
 }
 
+// SetToken injects the token from the request
 func SetToken(repo repository) Adapter {
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
