@@ -9,6 +9,46 @@
 			"Rev": "c7477ad8e330bef55bf1ebe300cf8aa67c492d1b"
 		},
 		{
+			"ImportPath": "github.com/dvsekhvalnov/jose2go",
+			"Comment": "v1.2-3-g2a04a55",
+			"Rev": "2a04a552f4a8adf7d51731877b7a2021bab968bb"
+		},
+		{
+			"ImportPath": "github.com/dvsekhvalnov/jose2go/aes",
+			"Comment": "v1.2-3-g2a04a55",
+			"Rev": "2a04a552f4a8adf7d51731877b7a2021bab968bb"
+		},
+		{
+			"ImportPath": "github.com/dvsekhvalnov/jose2go/arrays",
+			"Comment": "v1.2-3-g2a04a55",
+			"Rev": "2a04a552f4a8adf7d51731877b7a2021bab968bb"
+		},
+		{
+			"ImportPath": "github.com/dvsekhvalnov/jose2go/base64url",
+			"Comment": "v1.2-3-g2a04a55",
+			"Rev": "2a04a552f4a8adf7d51731877b7a2021bab968bb"
+		},
+		{
+			"ImportPath": "github.com/dvsekhvalnov/jose2go/compact",
+			"Comment": "v1.2-3-g2a04a55",
+			"Rev": "2a04a552f4a8adf7d51731877b7a2021bab968bb"
+		},
+		{
+			"ImportPath": "github.com/dvsekhvalnov/jose2go/kdf",
+			"Comment": "v1.2-3-g2a04a55",
+			"Rev": "2a04a552f4a8adf7d51731877b7a2021bab968bb"
+		},
+		{
+			"ImportPath": "github.com/dvsekhvalnov/jose2go/keys/ecc",
+			"Comment": "v1.2-3-g2a04a55",
+			"Rev": "2a04a552f4a8adf7d51731877b7a2021bab968bb"
+		},
+		{
+			"ImportPath": "github.com/dvsekhvalnov/jose2go/padding",
+			"Comment": "v1.2-3-g2a04a55",
+			"Rev": "2a04a552f4a8adf7d51731877b7a2021bab968bb"
+		},
+		{
 			"ImportPath": "github.com/google/go-github/github",
 			"Rev": "34fb8ee07214d23c3035c95691fe9069705814d6"
 		},

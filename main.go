@@ -15,7 +15,6 @@ import (
 )
 
 const defaultPath = "/etc/gh-service.conf"
-const apiVersion = "/v1"
 
 // Define configuration flags
 var confFilePath = flag.String("conf", defaultPath, "Custom path for configuration file")
@@ -48,13 +47,9 @@ func main() {
 
 	r := mux.NewRouter()
 
-	versionSubrouter := r.PathPrefix(apiVersion).Subrouter()
-
-	subrouter := versionSubrouter.PathPrefix("/api/v1/repository/github/").Subrouter()
-	subrouter.HandleFunc("/gh_callback", handler.Login)
-	subrouter.HandleFunc("/github_oauth_cb", handler.Callback)
-	subrouter.Handle("/{username}/repos", interfaces.Adapt(http.HandlerFunc(handler.ShowRepos), interfaces.Notify(), interfaces.SetToken(ghrepo))).Methods("GET")
-	subrouter.Handle("/{username}/{repo}", interfaces.Adapt(http.HandlerFunc(handler.ShowRepo), interfaces.Notify(), interfaces.SetToken(ghrepo))).Methods("GET")
+	subrouter := r.PathPrefix("/api/v1/repository/github").Subrouter()
+	subrouter.Handle("/{username}/repos", interfaces.Adapt(http.HandlerFunc(handler.ShowRepos), interfaces.Notify(), interfaces.GetToken(ghrepo, config.Host, config.Salt))).Methods("GET")
+	subrouter.Handle("/{username}/{repo}", interfaces.Adapt(http.HandlerFunc(handler.ShowRepo), interfaces.Notify(), interfaces.GetToken(ghrepo, config.Host, config.Salt))).Methods("GET")
 	// subrouter.Handle("/user/{username}", interfaces.Adapt(http.HandlerFunc(handler.ShowUser), interfaces.Notify(), interfaces.SetToken(ghrepo))).Methods("GET")
 	// subrouter.Handle("/user/{username}/repos", interfaces.Adapt(http.HandlerFunc(handler.CreateRepo), interfaces.Notify(), interfaces.SetToken(ghrepo))).Methods("POST")
 	// subrouter.Handle("/user/{username}/keys", interfaces.Adapt(http.HandlerFunc(handler.CreateRepo), interfaces.Notify(), interfaces.SetToken(ghrepo))).Methods("GET")

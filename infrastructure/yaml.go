@@ -10,6 +10,8 @@ type Configuration struct {
 	Port         string   `yaml:"port"`
 	ClientID     string   `yaml:"clientID"`
 	ClientSecret string   `yaml:"clientSecret"`
+	Salt         string   `yaml:"salt"`
+	Host         string   `yaml:"host"`
 	Scopes       []string `yaml:"scopes,flow"`
 }
 
