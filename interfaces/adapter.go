@@ -49,11 +49,14 @@ func SetToken(repo repository) Adapter {
 }
 
 type integration struct {
-	Token    string `json:"token"`
-	Provider string `json:"provider"`
+	UserID     int    `json:"user_id"`
+	Token      string `json:"token"`
+	Username   string `json:"username"`
+	Provider   string `json:"provider"`
+	ExpireDate int64  `json:"expire_date"`
 }
 
-type integrationWrapper struct {
+type integrationsWrapper struct {
 	Integrations []integration `json:"integrations"`
 }
 
@@ -84,7 +87,7 @@ func GetToken(repo repository, apiURL string, salt string) Adapter {
 			resp, _ := client.Do(request)
 			defer resp.Body.Close()
 
-			integrations := integrationWrapper{}
+			integrations := integrationsWrapper{}
 			decoder := json.NewDecoder(resp.Body)
 			decoder.Decode(&integrations)
 			var token string
