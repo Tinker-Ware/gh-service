@@ -65,12 +65,14 @@
 			"Rev": "f15e0c49460fd49eebe2bcc8486b05d1bef68d3a"
 		},
 		{
-			"ImportPath": "github.com/gorilla/securecookie",
-			"Rev": "ba5126409e0340d53e989ad07501a14949889a0d"
+			"ImportPath": "github.com/rs/cors",
+			"Comment": "v1.0",
+			"Rev": "a62a804a8a009876ca59105f7899938a1349f4b3"
 		},
 		{
-			"ImportPath": "github.com/gorilla/sessions",
-			"Rev": "f61c3ec2cf65d69e7efedfd4d060fe128882c951"
+			"ImportPath": "github.com/rs/xhandler",
+			"Comment": "v1.0-1-ged27b6f",
+			"Rev": "ed27b6fd65218132ee50cd95f38474a3d8a2cd12"
 		},
 		{
 			"ImportPath": "golang.org/x/net/context",
