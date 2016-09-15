@@ -77,6 +77,10 @@ func (handler WebServiceHandler) Login(res http.ResponseWriter, req *http.Reques
 
 }
 
+type oauthWrapper struct {
+	OauthRequest oauthRequest `json:"oauth_request"`
+}
+
 type oauthRequest struct {
 	UserID int    `json:"user_id"`
 	Code   string `json:"code"`
@@ -97,15 +101,15 @@ func (handler WebServiceHandler) Callback(res http.ResponseWriter, req *http.Req
 
 	decoder := json.NewDecoder(req.Body)
 
-	var oauthreq oauthRequest
+	var oauthwrapper oauthWrapper
 
-	err := decoder.Decode(&oauthreq)
+	err := decoder.Decode(&oauthwrapper)
 	if err != nil {
 		res.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	token, err := handler.GHInteractor.GHCallback(oauthreq.Code, "", oauthreq.State)
+	token, err := handler.GHInteractor.GHCallback(oauthwrapper.OauthRequest.Code, "", oauthwrapper.OauthRequest.State)
 	if err != nil {
 		res.WriteHeader(http.StatusInternalServerError)
 		return
@@ -113,7 +117,7 @@ func (handler WebServiceHandler) Callback(res http.ResponseWriter, req *http.Req
 
 	wrapper := integrationWrapper{
 		Integration: integration{
-			UserID:     oauthreq.UserID,
+			UserID:     oauthwrapper.OauthRequest.UserID,
 			Token:      token.AccessToken,
 			Provider:   "github",
 			Username:   token.Username,
@@ -125,7 +129,7 @@ func (handler WebServiceHandler) Callback(res http.ResponseWriter, req *http.Req
 
 	buf := bytes.NewBuffer(reqBytes)
 
-	path := fmt.Sprintf(integrationURL, oauthreq.UserID)
+	path := fmt.Sprintf(integrationURL, oauthwrapper.OauthRequest.UserID)
 
 	request, _ := http.NewRequest(http.MethodPost, handler.APIHost+path, buf)
 	request.Header.Add("Authorization", userToken)
