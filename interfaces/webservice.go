@@ -1,6 +1,7 @@
 package interfaces
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -8,7 +9,6 @@ import (
 
 	"github.com/Tinker-Ware/gh-service/domain"
 	"github.com/gorilla/mux"
-	"github.com/gorilla/sessions"
 	"golang.org/x/oauth2"
 )
 
@@ -63,7 +63,7 @@ type GHInteractor interface {
 // WebServiceHandler has all the necessary fields to run a web-based interface
 type WebServiceHandler struct {
 	GHInteractor GHInteractor
-	Sessions     *sessions.CookieStore
+	APIHost      string
 }
 
 // Login is a helper method to test the Github oauth login
@@ -77,23 +77,69 @@ func (handler WebServiceHandler) Login(res http.ResponseWriter, req *http.Reques
 
 }
 
+type oauthRequest struct {
+	UserID int    `json:"user_id"`
+	Code   string `json:"code"`
+	State  string `json:"state"`
+}
+
+type integrationWrapper struct {
+	Integration integration `json:"integration"`
+}
+
+const integrationURL string = "/api/v1/users/%d/integration"
+
 // Callback manages the Github OAUTH callback
 func (handler WebServiceHandler) Callback(res http.ResponseWriter, req *http.Request) {
+	defer req.Body.Close()
 
-	incomingState := req.FormValue("state")
-	code := req.FormValue("code")
+	userToken := req.Header.Get("Authorization")
 
-	state := ""
-	user, err := handler.GHInteractor.GHCallback(code, state, incomingState)
+	decoder := json.NewDecoder(req.Body)
+
+	var oauthreq oauthRequest
+
+	err := decoder.Decode(&oauthreq)
 	if err != nil {
+		res.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	usrB, _ := json.Marshal(user)
+	token, err := handler.GHInteractor.GHCallback(oauthreq.Code, "", oauthreq.State)
+	if err != nil {
+		res.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 
-	res.Header().Set("Content-Type", "application/json")
+	wrapper := integrationWrapper{
+		Integration: integration{
+			UserID:     oauthreq.UserID,
+			Token:      token.AccessToken,
+			Provider:   "github",
+			Username:   token.Username,
+			ExpireDate: token.ExpirationDate,
+		},
+	}
+
+	reqBytes, _ := json.Marshal(&wrapper)
+
+	buf := bytes.NewBuffer(reqBytes)
+
+	path := fmt.Sprintf(integrationURL, oauthreq.UserID)
+
+	request, _ := http.NewRequest(http.MethodPost, handler.APIHost+path, buf)
+	request.Header.Add("Authorization", userToken)
+
+	client := &http.Client{}
+
+	resp, _ := client.Do(request)
+	if resp.StatusCode == http.StatusCreated {
+		res.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	// res.Header().Set("Content-Type", "application/json")
 	res.WriteHeader(http.StatusCreated)
-	res.Write(usrB)
+	// res.Write(usrB)
 
 }
 
@@ -102,24 +148,6 @@ func (handler WebServiceHandler) Root(res http.ResponseWriter, req *http.Request
 	res.Header().Set("Content-Type", "text/html; charset=utf-8")
 	res.WriteHeader(http.StatusOK)
 	res.Write([]byte(htmlIndex))
-}
-
-// GetCurrentUser gets the current user in the microservice
-func (handler WebServiceHandler) GetCurrentUser(res http.ResponseWriter, req *http.Request) {
-	session, err := handler.Sessions.Get(req, "user")
-	if err != nil {
-		http.Error(res, err.Error(), 500)
-		return
-	}
-
-	usr := session.Values["user"]
-
-	userS := usr.(string)
-
-	res.Header().Set("Content-Type", "application/json")
-	res.WriteHeader(http.StatusOK)
-	res.Write([]byte(userS))
-
 }
 
 // ShowUser returns the current logged user
