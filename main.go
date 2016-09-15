@@ -11,6 +11,7 @@ import (
 	"github.com/Tinker-Ware/gh-service/usecases"
 	"github.com/codegangsta/negroni"
 	"github.com/gorilla/mux"
+	"github.com/rs/cors"
 )
 
 const defaultPath = "/etc/gh-service.conf"
@@ -42,6 +43,12 @@ func main() {
 		APIHost:      config.APIHost,
 	}
 
+	// Add CORS Support
+	c := cors.New(cors.Options{
+		AllowedOrigins: []string{"http://api.tinkerware.io", "http://192.168.33.10"},
+		AllowedHeaders: []string{"Authorization", "authorization", "provider-token"},
+	})
+
 	r := mux.NewRouter()
 
 	subrouter := r.PathPrefix("/api/v1/repository/github").Subrouter()
@@ -57,6 +64,7 @@ func main() {
 	// subrouter.HandleFunc("/user_info", handler.GetCurrentUser).Methods("GET")
 
 	n := negroni.Classic()
+	n.Use(c)
 	n.UseHandler(r)
 
 	port := bytes.Buffer{}
