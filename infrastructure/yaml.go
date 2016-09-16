@@ -13,7 +13,7 @@ type Configuration struct {
 	ClientSecret string   `yaml:"clientSecret"`
 	Salt         string   `yaml:"salt"`
 	Scopes       []string `yaml:"scopes,flow"`
-	APIHost      string
+	APIHost      string   `yaml:"apihost"`
 }
 
 // GetConfiguration returns the configuration stored in a file
