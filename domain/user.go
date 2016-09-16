@@ -2,9 +2,10 @@ package domain
 
 // User is a type where the user attributes are stored
 type User struct {
-	ID          int
-	Username    string
-	AccessToken string
+	ID             int
+	Username       string
+	AccessToken    string
+	ExpirationDate int64
 }
 
 // Link defines the structure to the navigation links

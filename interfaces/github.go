@@ -71,8 +71,9 @@ func (repo GithubRepository) GetToken(code, givenState, incomingStates string) (
 	}
 
 	usr := domain.User{
-		Username:    *user.Login,
-		AccessToken: token.AccessToken,
+		Username:       *user.Login,
+		AccessToken:    token.AccessToken,
+		ExpirationDate: token.Expiry.Unix(),
 	}
 
 	return &usr, nil

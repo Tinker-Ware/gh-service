@@ -61,16 +61,13 @@
 			"Rev": "215affda49addc4c8ef7e2534915df2c8c35c6cd"
 		},
 		{
+			"ImportPath": "github.com/gorilla/handlers",
+			"Comment": "v1.1-11-ga577578",
+			"Rev": "a5775781a543af3c6b9f5baf10995e4d14168950"
+		},
+		{
 			"ImportPath": "github.com/gorilla/mux",
 			"Rev": "f15e0c49460fd49eebe2bcc8486b05d1bef68d3a"
-		},
-		{
-			"ImportPath": "github.com/gorilla/securecookie",
-			"Rev": "ba5126409e0340d53e989ad07501a14949889a0d"
-		},
-		{
-			"ImportPath": "github.com/gorilla/sessions",
-			"Rev": "f61c3ec2cf65d69e7efedfd4d060fe128882c951"
 		},
 		{
 			"ImportPath": "golang.org/x/net/context",

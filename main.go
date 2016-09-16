@@ -10,8 +10,8 @@ import (
 	"github.com/Tinker-Ware/gh-service/interfaces"
 	"github.com/Tinker-Ware/gh-service/usecases"
 	"github.com/codegangsta/negroni"
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
-	"github.com/gorilla/sessions"
 )
 
 const defaultPath = "/etc/gh-service.conf"
@@ -38,19 +38,21 @@ func main() {
 		GithubRepository: ghrepo,
 	}
 
-	store := sessions.NewCookieStore([]byte("something-very-secret"))
-
 	handler := interfaces.WebServiceHandler{
 		GHInteractor: ghinteractor,
-		Sessions:     store,
+		APIHost:      config.APIHost,
 	}
+
+	// Add CORS Support
+	headers := handlers.AllowedHeaders([]string{"Accept", "Content-Type", "Authorization"})
+	origins := handlers.AllowedOrigins([]string{"http://localhost", "http://provision.tinkerware.io", "https://provision.tinkerware.io"})
 
 	r := mux.NewRouter()
 
 	subrouter := r.PathPrefix("/api/v1/repository/github").Subrouter()
-	subrouter.Handle("/{username}/repos", interfaces.Adapt(http.HandlerFunc(handler.ShowRepos), interfaces.Notify(), interfaces.GetToken(ghrepo, config.Host, config.Salt))).Methods("GET")
-	subrouter.Handle("/{username}/{repo}", interfaces.Adapt(http.HandlerFunc(handler.ShowRepo), interfaces.Notify(), interfaces.GetToken(ghrepo, config.Host, config.Salt))).Methods("GET")
-	// subrouter.Handle("/user/{username}", interfaces.Adapt(http.HandlerFunc(handler.ShowUser), interfaces.Notify(), interfaces.SetToken(ghrepo))).Methods("GET")
+	subrouter.Handle("/oauth", interfaces.Adapt(http.HandlerFunc(handler.Callback), interfaces.Notify())).Methods("POST")
+	subrouter.Handle("/{username}/repos", interfaces.Adapt(http.HandlerFunc(handler.ShowRepos), interfaces.Notify(), interfaces.GetToken(ghrepo, config.APIHost, config.Salt))) //.Methods("GET")
+	subrouter.Handle("/{username}/{repo}", interfaces.Adapt(http.HandlerFunc(handler.ShowRepo), interfaces.Notify(), interfaces.GetToken(ghrepo, config.APIHost, config.Salt))) //.Methods("GET")
 	// subrouter.Handle("/user/{username}/repos", interfaces.Adapt(http.HandlerFunc(handler.CreateRepo), interfaces.Notify(), interfaces.SetToken(ghrepo))).Methods("POST")
 	// subrouter.Handle("/user/{username}/keys", interfaces.Adapt(http.HandlerFunc(handler.CreateRepo), interfaces.Notify(), interfaces.SetToken(ghrepo))).Methods("GET")
 	// subrouter.Handle("/user/{username}/keys", interfaces.Adapt(http.HandlerFunc(handler.CreateKey), interfaces.Notify(), interfaces.SetToken(ghrepo))).Methods("POST")
@@ -60,7 +62,7 @@ func main() {
 	// subrouter.HandleFunc("/user_info", handler.GetCurrentUser).Methods("GET")
 
 	n := negroni.Classic()
-	n.UseHandler(r)
+	n.UseHandler(handlers.CORS(headers, origins)(r))
 
 	port := bytes.Buffer{}
 

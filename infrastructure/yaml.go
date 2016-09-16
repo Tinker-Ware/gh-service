@@ -6,15 +6,17 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+// Configuration stores the fields to configure the application
 type Configuration struct {
 	Port         string   `yaml:"port"`
 	ClientID     string   `yaml:"clientID"`
 	ClientSecret string   `yaml:"clientSecret"`
 	Salt         string   `yaml:"salt"`
-	Host         string   `yaml:"host"`
 	Scopes       []string `yaml:"scopes,flow"`
+	APIHost      string   `yaml:"apihost"`
 }
 
+// GetConfiguration returns the configuration stored in a file
 func GetConfiguration(path string) (*Configuration, error) {
 
 	data, err := ioutil.ReadFile(path)
