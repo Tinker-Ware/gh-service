@@ -14,9 +14,11 @@ A configuration file must be provided, the default route for the file is located
 
 ````yaml
   ---
-  clientID: asdfg
-  clientSecret: aoihcou
+  clientID: clientfromprovider
+  clientSecret: secretfromprovider
   port: 1000
+  salt: somesalt
+  apihost: http://apihost.example
   scopes:
   - "user:email"
   - repo
