@@ -91,9 +91,19 @@ type integrationWrapper struct {
 	Integration integration `json:"integration"`
 }
 
+type callbackResponse struct {
+	Callback callback `json:"callback"`
+}
+
+type callback struct {
+	Provider string `json:"provider"`
+	Username string `json:"username"`
+}
+
 const integrationURL string = "/api/v1/users/%d/integration"
 
 // Callback manages the Github OAUTH callback
+// TODO: refactor this function, it has grown to big
 func (handler WebServiceHandler) Callback(res http.ResponseWriter, req *http.Request) {
 	defer req.Body.Close()
 
@@ -142,9 +152,19 @@ func (handler WebServiceHandler) Callback(res http.ResponseWriter, req *http.Req
 		res.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	// res.Header().Set("Content-Type", "application/json")
+
+	response := callbackResponse{
+		Callback: callback{
+			Provider: "github",
+			Username: token.Username,
+		},
+	}
+
+	respBytes, _ := json.Marshal(&response)
+
+	res.Header().Set("Content-Type", "application/json")
 	res.WriteHeader(http.StatusCreated)
-	// res.Write(usrB)
+	res.Write(respBytes)
 
 }
 
