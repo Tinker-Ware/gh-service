@@ -133,11 +133,12 @@ func (handler WebServiceHandler) Callback(res http.ResponseWriter, req *http.Req
 
 	request, _ := http.NewRequest(http.MethodPost, handler.APIHost+path, buf)
 	request.Header.Add("Authorization", userToken)
+	request.Header.Add("Content-Type", "application/json")
 
 	client := &http.Client{}
 
 	resp, _ := client.Do(request)
-	if resp.StatusCode == http.StatusCreated {
+	if resp.StatusCode != http.StatusCreated {
 		res.WriteHeader(http.StatusInternalServerError)
 		return
 	}
