@@ -45,7 +45,7 @@ func main() {
 
 	// Add CORS Support
 	headers := handlers.AllowedHeaders([]string{"Accept", "Content-Type", "Authorization"})
-	origins := handlers.AllowedOrigins([]string{"http://localhost", "http://192.168.33.10", "http://provision.tinkerware.io", "https://provision.tinkerware.io"})
+	origins := handlers.AllowedOrigins([]string{"http://localhost", "http://provision.tinkerware.io", "https://provision.tinkerware.io"})
 
 	r := mux.NewRouter()
 
