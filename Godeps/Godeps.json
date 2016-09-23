@@ -1,7 +1,7 @@
 {
 	"ImportPath": "github.com/Tinker-Ware/gh-service",
 	"GoVersion": "go1.6",
-	"GodepVersion": "v73",
+	"GodepVersion": "v74",
 	"Deps": [
 		{
 			"ImportPath": "github.com/codegangsta/negroni",

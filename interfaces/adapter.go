@@ -60,7 +60,7 @@ type integrationsWrapper struct {
 	Integrations []integration `json:"integrations"`
 }
 
-const integrationsURL string = "/api/v1/users/%s/integrations"
+const integrationsURL string = "/api/v1/users/%s/integration"
 
 // GetToken gets the token from the users microservice
 func GetToken(repo repository, apiURL string, salt string) Adapter {
@@ -68,7 +68,8 @@ func GetToken(repo repository, apiURL string, salt string) Adapter {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			userToken := r.Header.Get("authorization")
 
-			payload, _, _ := jose.Decode(userToken, []byte(salt))
+			sp := strings.Split(userToken, " ")
+			payload, _, _ := jose.Decode(sp[1], []byte(salt))
 
 			var objmap map[string]*json.RawMessage
 			json.Unmarshal([]byte(payload), &objmap)
