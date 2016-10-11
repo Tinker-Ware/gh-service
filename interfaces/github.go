@@ -112,31 +112,36 @@ func (repo *GithubRepository) SetToken(token string) {
 // GetAllRepos returns all the repos from an user account
 func (repo GithubRepository) GetAllRepos(username string) ([]domain.Repository, error) {
 
-	// list all repositories for the authenticated user
-	ghrepos, _, err := repo.client.Repositories.List("", nil)
-
-	if err != nil {
-		fmt.Println(err.Error())
-		return nil, err
+	opt := &github.RepositoryListOptions{
+		ListOptions: github.ListOptions{PerPage: 30},
 	}
 
-	repos := []domain.Repository{}
-
-	for _, repo := range ghrepos {
-
-		r := domain.Repository{
-			Name:        repo.Name,
-			FullName:    repo.FullName,
-			Description: repo.Description,
-			Private:     repo.Private,
-			HTMLURL:     repo.HTMLURL,
-			CloneURL:    repo.CloneURL,
-			SSHURL:      repo.SSHURL,
+	var allRepos []domain.Repository
+	for {
+		repos, resp, err := repo.client.Repositories.List("", opt)
+		if err != nil {
+			return nil, err
 		}
-		repos = append(repos, r)
+		for _, repo := range repos {
+
+			r := domain.Repository{
+				Name:        repo.Name,
+				FullName:    repo.FullName,
+				Description: repo.Description,
+				Private:     repo.Private,
+				HTMLURL:     repo.HTMLURL,
+				CloneURL:    repo.CloneURL,
+				SSHURL:      repo.SSHURL,
+			}
+			allRepos = append(allRepos, r)
+		}
+		if resp.NextPage == 0 {
+			break
+		}
+		opt.ListOptions.Page = resp.NextPage
 	}
 
-	return repos, nil
+	return allRepos, nil
 }
 
 // GetRepo gets the information from a single repo
