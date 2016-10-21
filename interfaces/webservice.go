@@ -139,6 +139,17 @@ func (handler WebServiceHandler) Callback(res http.ResponseWriter, req *http.Req
 	token, err := handler.GHInteractor.GHCallback(oauthwrapper.OauthRequest.Code, "", oauthwrapper.OauthRequest.State)
 	if err != nil {
 		res.WriteHeader(http.StatusInternalServerError)
+		errS := fmt.Sprintf("Github oauth error: %s", err.Error())
+
+		log.Println(errS)
+
+		resErr := httpError{
+			Error: errS,
+		}
+
+		respBytes, _ := json.Marshal(resErr)
+		res.Header().Set("Content-Type", "application/json")
+		res.Write(respBytes)
 		return
 	}
 
