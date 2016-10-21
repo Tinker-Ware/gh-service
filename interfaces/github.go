@@ -1,7 +1,6 @@
 package interfaces
 
 import (
-	"errors"
 	"fmt"
 	"math/rand"
 	"strings"
@@ -58,16 +57,14 @@ func (repo GithubRepository) GetToken(code, givenState, incomingStates string) (
 
 	token, err := repo.oauthConfig.Exchange(oauth2.NoContext, code)
 	if err != nil {
-		// TODO: Log with interactor Logger not yet implemented
-		fmt.Printf("oauthConf.Exchange() failed with '%s'\n", err.Error())
-		return nil, err
+		return nil, fmt.Errorf("oauthConf.Exchange() failed with '%s'\n", err.Error())
 	}
 
 	oauthClient := repo.oauthConfig.Client(oauth2.NoContext, token)
 	client := github.NewClient(oauthClient)
 	user, _, err := client.Users.Get("")
 	if err != nil {
-		return nil, errors.New("Cannot retrieve User data")
+		return nil, fmt.Errorf("Cannot retrieve User data: %s", err.Error())
 	}
 
 	usr := domain.User{
