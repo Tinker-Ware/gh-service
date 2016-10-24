@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -100,6 +101,10 @@ type callback struct {
 	Username string `json:"username"`
 }
 
+type httpError struct {
+	Error string `json:"error"`
+}
+
 const integrationURL string = "/api/v1/users/%d/integration"
 
 // Callback manages the Github OAUTH callback
@@ -115,13 +120,36 @@ func (handler WebServiceHandler) Callback(res http.ResponseWriter, req *http.Req
 
 	err := decoder.Decode(&oauthwrapper)
 	if err != nil {
-		res.WriteHeader(http.StatusInternalServerError)
+		res.WriteHeader(422)
+
+		errS := fmt.Sprintf("cannot process request %s", err.Error())
+
+		log.Println(errS)
+
+		resErr := httpError{
+			Error: "cannot process request",
+		}
+
+		respBytes, _ := json.Marshal(resErr)
+		res.Header().Set("Content-Type", "application/json")
+		res.Write(respBytes)
 		return
 	}
 
 	token, err := handler.GHInteractor.GHCallback(oauthwrapper.OauthRequest.Code, "", oauthwrapper.OauthRequest.State)
 	if err != nil {
 		res.WriteHeader(http.StatusInternalServerError)
+		errS := fmt.Sprintf("Github oauth error: %s", err.Error())
+
+		log.Println(errS)
+
+		resErr := httpError{
+			Error: errS,
+		}
+
+		respBytes, _ := json.Marshal(resErr)
+		res.Header().Set("Content-Type", "application/json")
+		res.Write(respBytes)
 		return
 	}
 
@@ -150,6 +178,13 @@ func (handler WebServiceHandler) Callback(res http.ResponseWriter, req *http.Req
 	resp, _ := client.Do(request)
 	if resp.StatusCode != http.StatusCreated {
 		res.WriteHeader(http.StatusInternalServerError)
+		resErr := httpError{
+			Error: "cannot save integration",
+		}
+
+		respBytes, _ := json.Marshal(resErr)
+		res.Header().Set("Content-Type", "application/json")
+		res.Write(respBytes)
 		return
 	}
 
@@ -203,7 +238,18 @@ func (handler WebServiceHandler) ShowRepos(res http.ResponseWriter, req *http.Re
 	repos, err := handler.GHInteractor.ShowRepos(username)
 
 	if err != nil {
-		res.WriteHeader(http.StatusNotFound)
+		res.WriteHeader(http.StatusInternalServerError)
+		errS := fmt.Sprintf("Cannot retrieve repositories: %s", err.Error())
+
+		log.Println(errS)
+
+		resErr := httpError{
+			Error: errS,
+		}
+
+		respBytes, _ := json.Marshal(resErr)
+		res.Header().Set("Content-Type", "application/json")
+		res.Write(respBytes)
 		return
 	}
 
