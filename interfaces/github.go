@@ -1,6 +1,7 @@
 package interfaces
 
 import (
+	"context"
 	"fmt"
 	"math/rand"
 	"strings"
@@ -18,6 +19,7 @@ import (
 type GithubRepository struct {
 	client      *github.Client
 	oauthConfig *oauth2.Config
+	context     context.Context
 }
 
 // NewGithubRepository initializes the GithubRepository
@@ -32,6 +34,7 @@ func NewGithubRepository(clientID, clientSecret string, scopes []string) (*Githu
 
 	rp := &GithubRepository{
 		oauthConfig: oauth2client,
+		context:     context.Background(),
 	}
 
 	return rp, nil
@@ -62,7 +65,7 @@ func (repo GithubRepository) GetToken(code, givenState, incomingStates string) (
 
 	oauthClient := repo.oauthConfig.Client(oauth2.NoContext, token)
 	client := github.NewClient(oauthClient)
-	user, _, err := client.Users.Get("")
+	user, _, err := client.Users.Get(repo.context, "")
 	if err != nil {
 		return nil, fmt.Errorf("Cannot retrieve User data: %s", err.Error())
 	}
@@ -78,7 +81,7 @@ func (repo GithubRepository) GetToken(code, givenState, incomingStates string) (
 
 // GetUser retrieves the github user information
 func (repo *GithubRepository) GetUser(username string) (*domain.User, error) {
-	user, _, err := repo.client.Users.Get(username)
+	user, _, err := repo.client.Users.Get(repo.context, username)
 
 	if err != nil {
 		return nil, err
@@ -115,7 +118,7 @@ func (repo GithubRepository) GetAllRepos(username string) ([]domain.Repository, 
 
 	var allRepos []domain.Repository
 	for {
-		repos, resp, err := repo.client.Repositories.List("", opt)
+		repos, resp, err := repo.client.Repositories.List(repo.context, "", opt)
 		if err != nil {
 			return nil, err
 		}
@@ -144,7 +147,7 @@ func (repo GithubRepository) GetAllRepos(username string) ([]domain.Repository, 
 // GetRepo gets the information from a single repo
 func (repo GithubRepository) GetRepo(username, reponame string) (*domain.Repository, error) {
 
-	rp, _, err := repo.client.Repositories.Get(username, reponame)
+	rp, _, err := repo.client.Repositories.Get(repo.context, username, reponame)
 	if err != nil {
 		return nil, err
 	}
@@ -168,7 +171,7 @@ func (repo GithubRepository) CreateRepo(username, reponame, org string, private 
 		Name:    github.String(reponame),
 		Private: github.Bool(private),
 	}
-	rp, _, err := repo.client.Repositories.Create(org, rp)
+	rp, _, err := repo.client.Repositories.Create(repo.context, org, rp)
 
 	if err != nil {
 		return nil, err
@@ -189,7 +192,7 @@ func (repo GithubRepository) CreateRepo(username, reponame, org string, private 
 
 // GetKey returns a Key from the user github account
 func (repo GithubRepository) GetKey(username string, id int) (*domain.Key, error) {
-	ghkey, _, err := repo.client.Users.GetKey(id)
+	ghkey, _, err := repo.client.Users.GetKey(repo.context, id)
 	if err != nil {
 		return nil, err
 	}
@@ -206,7 +209,7 @@ func (repo GithubRepository) GetKey(username string, id int) (*domain.Key, error
 
 // ShowKeys returns all the keys in a user github account
 func (repo GithubRepository) ShowKeys(username string) ([]domain.Key, error) {
-	ghKeys, _, err := repo.client.Users.ListKeys(username, nil)
+	ghKeys, _, err := repo.client.Users.ListKeys(repo.context, username, nil)
 	if err != nil {
 		fmt.Println(err.Error())
 		return nil, err
@@ -236,7 +239,7 @@ func (repo GithubRepository) CreateKey(username string, key *domain.Key) error {
 		Key:   key.Key,
 	}
 
-	ghK, _, err := repo.client.Users.CreateKey(&k)
+	ghK, _, err := repo.client.Users.CreateKey(repo.context, &k)
 	if err != nil {
 		return err
 	}
@@ -261,7 +264,7 @@ func (repo GithubRepository) CreateFile(file domain.File, author domain.Author, 
 		},
 	}
 
-	_, _, err := repo.client.Repositories.CreateFile(username, repoName, file.Path, opt)
+	_, _, err := repo.client.Repositories.CreateFile(repo.context, username, repoName, file.Path, opt)
 	if err != nil {
 		return err
 	}
@@ -275,7 +278,7 @@ func (repo GithubRepository) AddFiles(files []domain.File, author domain.Author,
 
 	// Get the reference sha
 	// TODO remove hardcoded branch name
-	ghTree, _, err := repo.client.Git.GetRef(username, reponame, "heads/master")
+	ghTree, _, err := repo.client.Git.GetRef(repo.context, username, reponame, "heads/master")
 	if err != nil {
 
 		// if the repo is empty create a README, else unexpected error
@@ -291,7 +294,7 @@ func (repo GithubRepository) AddFiles(files []domain.File, author domain.Author,
 			}
 
 			// Repository should not be empty, otherwise, unexpected error
-			ghTree, _, err = repo.client.Git.GetRef(username, reponame, "heads/master")
+			ghTree, _, err = repo.client.Git.GetRef(repo.context, username, reponame, "heads/master")
 			if err != nil {
 				return err
 			}
@@ -319,7 +322,7 @@ func (repo GithubRepository) AddFiles(files []domain.File, author domain.Author,
 	}
 
 	// Get the current tree
-	currentTree, _, err := repo.client.Git.GetTree(username, reponame, lastCommit, false)
+	currentTree, _, err := repo.client.Git.GetTree(repo.context, username, reponame, lastCommit, false)
 	if err != nil {
 		return err
 	}
@@ -336,7 +339,7 @@ func (repo GithubRepository) AddFiles(files []domain.File, author domain.Author,
 		tree = append(tree, t)
 	}
 
-	newTree, _, err := repo.client.Git.CreateTree(username, reponame, *currentTree.SHA, tree)
+	newTree, _, err := repo.client.Git.CreateTree(repo.context, username, reponame, *currentTree.SHA, tree)
 	if err != nil {
 		return err
 	}
@@ -347,7 +350,7 @@ func (repo GithubRepository) AddFiles(files []domain.File, author domain.Author,
 		Tree:    &github.Tree{SHA: newTree.SHA},
 	}
 
-	newCommit, _, err := repo.client.Git.CreateCommit(username, reponame, &commit)
+	newCommit, _, err := repo.client.Git.CreateCommit(repo.context, username, reponame, &commit)
 	if err != nil {
 		return err
 	}
@@ -359,7 +362,7 @@ func (repo GithubRepository) AddFiles(files []domain.File, author domain.Author,
 		},
 	}
 
-	_, _, err = repo.client.Git.UpdateRef(username, reponame, &reference, false)
+	_, _, err = repo.client.Git.UpdateRef(repo.context, username, reponame, &reference, false)
 	if err != nil {
 		return err
 	}
