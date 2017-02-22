@@ -19,6 +19,7 @@ type GithubRepository interface {
 	CreateFile(file domain.File, author domain.Author, username, repoName string) error
 	AddFiles(files []domain.File, author domain.Author, username, reponame string) error
 	GetUser(username string) (*domain.User, error)
+	AddDeployKey(username, reponame string, key *domain.Key) error
 }
 
 var (

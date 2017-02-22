@@ -2,6 +2,7 @@ package usecases_test
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -205,7 +206,7 @@ func deleteKey(id int, userToken string) {
 	tc := oauth2.NewClient(oauth2.NoContext, ts)
 
 	client := github.NewClient(tc)
-	client.Users.DeleteKey(id)
+	client.Users.DeleteKey(context.Background(), id)
 }
 
 func deleteToken(id int, username, userToken string) {
@@ -228,5 +229,5 @@ func deleteRepo(reponame, username, userToken string) {
 
 	client := github.NewClient(tc)
 
-	client.Repositories.Delete(username, reponame)
+	client.Repositories.Delete(context.Background(), username, reponame)
 }
