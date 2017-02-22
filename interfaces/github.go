@@ -370,6 +370,18 @@ func (repo GithubRepository) AddFiles(files []domain.File, author domain.Author,
 	return nil
 }
 
+func (repo GithubRepository) AddDeployKey(username, reponame string, key *domain.Key) error {
+	private := true
+	k := github.Key{
+		Title:    key.Title,
+		Key:      key.Key,
+		ReadOnly: &private,
+	}
+
+	_, _, err := repo.client.Repositories.CreateKey(repo.context, username, reponame, &k)
+	return err
+}
+
 func randSeq(n int) string {
 	rand.Seed(time.Now().UTC().UnixNano())
 	b := make([]rune, n)
