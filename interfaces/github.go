@@ -57,7 +57,7 @@ func (repo GithubRepository) GetToken(code, givenState, incomingStates string) (
 
 	token, err := repo.oauthConfig.Exchange(oauth2.NoContext, code)
 	if err != nil {
-		return nil, fmt.Errorf("oauthConf.Exchange() failed with '%s'\n", err.Error())
+		return nil, fmt.Errorf("oauthConf.Exchange() failed with '%s'", err.Error())
 	}
 
 	oauthClient := repo.oauthConfig.Client(oauth2.NoContext, token)
@@ -272,7 +272,6 @@ func (repo GithubRepository) CreateFile(file domain.File, author domain.Author, 
 func (repo GithubRepository) AddFiles(files []domain.File, author domain.Author, username, reponame string) error {
 	tree := []github.TreeEntry{}
 	emptyRepo := "409 Git Repository is empty"
-	lastCommit := ""
 
 	// Get the reference sha
 	// TODO remove hardcoded branch name
@@ -303,7 +302,7 @@ func (repo GithubRepository) AddFiles(files []domain.File, author domain.Author,
 		}
 
 	}
-	lastCommit = *ghTree.Ref
+	lastCommit := *ghTree.Ref
 
 	// Create a new tree
 	// TODO Check for existing files and paths
