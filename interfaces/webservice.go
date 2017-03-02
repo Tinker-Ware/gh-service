@@ -59,6 +59,7 @@ type GHInteractor interface {
 	ShowKey(username string, id int) (*domain.Key, error)
 	CreateFile(file domain.File, author domain.Author, username, repo string) error
 	AddFiles(files []domain.File, author domain.Author, username, repo string) error
+	AddDeployKey(username, reponame string, key *domain.Key) error
 }
 
 // WebServiceHandler has all the necessary fields to run a web-based interface
@@ -447,6 +448,44 @@ func (handler WebServiceHandler) AddMultipleFilesToRepository(res http.ResponseW
 	}
 
 	res.WriteHeader(http.StatusCreated)
+
+}
+
+type keyWrapper struct {
+	Key domain.Key `json:"deploy_key"`
+}
+
+func (handler WebServiceHandler) CreateRepoDeployKey(res http.ResponseWriter, req *http.Request) {
+	defer req.Body.Close()
+
+	vars := mux.Vars(req)
+
+	defer req.Body.Close()
+
+	username := vars["username"]
+	repoName := vars["repo"]
+
+	decoder := json.NewDecoder(req.Body)
+	var key keyWrapper
+	err := decoder.Decode(&key)
+	if err != nil {
+		log.Printf("Error unmarshaling json in CreateRepoDeployKey %s", err.Error())
+		res.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	err = handler.GHInteractor.AddDeployKey(username, repoName, &key.Key)
+	if err != nil {
+		log.Printf("Cannot create deploy key %s", err.Error())
+		res.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	keyB, _ := json.Marshal(key)
+
+	res.Header().Set("Content-Type", "application/json; charset=utf-8")
+	res.WriteHeader(http.StatusOK)
+	res.Write([]byte(keyB))
 
 }
 

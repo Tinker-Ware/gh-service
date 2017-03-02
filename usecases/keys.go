@@ -30,3 +30,8 @@ func (interactor GHInteractor) ShowKey(username string, id int) (*domain.Key, er
 	}
 	return key, nil
 }
+
+func (interactor GHInteractor) AddDeployKey(username, reponame string, key *domain.Key) error {
+	err := interactor.GithubRepository.AddDeployKey(username, reponame, key)
+	return err
+}

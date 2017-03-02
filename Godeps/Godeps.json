@@ -1,7 +1,7 @@
 {
 	"ImportPath": "github.com/Tinker-Ware/gh-service",
-	"GoVersion": "go1.6",
-	"GodepVersion": "v74",
+	"GoVersion": "go1.8",
+	"GodepVersion": "v79",
 	"Deps": [
 		{
 			"ImportPath": "github.com/codegangsta/negroni",
@@ -50,11 +50,11 @@
 		},
 		{
 			"ImportPath": "github.com/google/go-github/github",
-			"Rev": "34fb8ee07214d23c3035c95691fe9069705814d6"
+			"Rev": "28065814ab889552aebe99cd41b35bc5e31063fe"
 		},
 		{
 			"ImportPath": "github.com/google/go-querystring/query",
-			"Rev": "547ef5ac979778feb2f760cdb5f4eae1a2207b86"
+			"Rev": "53e6ce116135b80d037921a7fdd5138cf32d7a8a"
 		},
 		{
 			"ImportPath": "github.com/gorilla/context",

@@ -53,6 +53,7 @@ func main() {
 	subrouter.Handle("/oauth", interfaces.Adapt(http.HandlerFunc(handler.Callback), interfaces.Notify())).Methods("POST")
 	subrouter.Handle("/{username}/repos", interfaces.Adapt(http.HandlerFunc(handler.ShowRepos), interfaces.Notify(), interfaces.GetToken(ghrepo, config.APIHost, config.Salt))) //.Methods("GET")
 	subrouter.Handle("/{username}/{repo}", interfaces.Adapt(http.HandlerFunc(handler.ShowRepo), interfaces.Notify(), interfaces.GetToken(ghrepo, config.APIHost, config.Salt))) //.Methods("GET")
+	subrouter.Handle("/{username}/{repo}/deploy_key", interfaces.Adapt(http.HandlerFunc(handler.CreateRepoDeployKey), interfaces.Notify(), interfaces.GetToken(ghrepo, config.APIHost, config.Salt))).Methods("POST")
 	// subrouter.Handle("/user/{username}/repos", interfaces.Adapt(http.HandlerFunc(handler.CreateRepo), interfaces.Notify(), interfaces.SetToken(ghrepo))).Methods("POST")
 	// subrouter.Handle("/user/{username}/keys", interfaces.Adapt(http.HandlerFunc(handler.CreateRepo), interfaces.Notify(), interfaces.SetToken(ghrepo))).Methods("GET")
 	// subrouter.Handle("/user/{username}/keys", interfaces.Adapt(http.HandlerFunc(handler.CreateKey), interfaces.Notify(), interfaces.SetToken(ghrepo))).Methods("POST")
